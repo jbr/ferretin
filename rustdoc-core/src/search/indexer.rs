@@ -1,5 +1,5 @@
-use bincode::{Decode, Encode, config};
 use fieldwork::Fieldwork;
+use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHasher;
 use rustdoc_types::{Item, ItemEnum, StructKind, Trait};
@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::hash::{Hash, Hasher};
+use std::io::{Read, Write};
 use std::path::Path;
 use std::time::SystemTime;
 
@@ -153,7 +154,7 @@ impl<'a> Terms<'a> {
     }
 }
 
-#[derive(Debug, Clone, Encode, Decode, Fieldwork)]
+#[derive(Debug, Clone, Archive, RkyvSerialize, RkyvDeserialize, Fieldwork)]
 struct SearchableTerms {
     terms: BTreeMap<u64, Vec<(usize, f32)>>,
     ids: Vec<Vec<u32>>,
@@ -229,10 +230,17 @@ impl SearchIndex {
     }
 
     fn store(terms: &SearchableTerms, path: &Path) {
-        if let Ok(mut file) = OpenOptions::new().create_new(true).write(true).open(path)
-            && bincode::encode_into_std_write(terms, &mut file, config::standard()).is_err()
-        {
-            let _ = std::fs::remove_file(path);
+        if let Ok(mut file) = OpenOptions::new().create_new(true).write(true).open(path) {
+            match rkyv::to_bytes::<rkyv::rancor::Error>(terms) {
+                Ok(bytes) => {
+                    if file.write_all(&bytes).is_err() {
+                        let _ = std::fs::remove_file(path);
+                    }
+                }
+                Err(_) => {
+                    let _ = std::fs::remove_file(path);
+                }
+            }
         }
     }
 
@@ -241,10 +249,16 @@ impl SearchIndex {
         let index_mtime = file.metadata().ok().and_then(|m| m.modified().ok())?;
 
         let mtime = mtime?;
-        if index_mtime.duration_since(mtime).is_ok()
-            && let Ok(terms) = bincode::decode_from_std_read(&mut file, config::standard())
-        {
-            Some(terms)
+        if index_mtime.duration_since(mtime).is_ok() {
+            let mut bytes = Vec::new();
+            file.read_to_end(&mut bytes).ok()?;
+            match rkyv::from_bytes::<SearchableTerms, rkyv::rancor::Error>(&bytes) {
+                Ok(terms) => Some(terms),
+                Err(_) => {
+                    let _ = std::fs::remove_file(path);
+                    None
+                }
+            }
         } else {
             let _ = std::fs::remove_file(path);
             None
