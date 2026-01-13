@@ -97,26 +97,37 @@ fn eq_ignoring_dash_underscore(a: &str, b: &str) -> bool {
 }
 
 impl RustdocProject {
-    /// Create a new project from a Cargo.toml path
-    pub fn load(manifest_path: PathBuf) -> Result<Self> {
-        // Look for Cargo.toml in the working directory
-        if !manifest_path.exists() {
+    /// Create a new project from a path (directory or Cargo.toml)
+    ///
+    /// If given a directory, walks up to find the workspace root like cargo does.
+    /// If given a Cargo.toml path, uses that directly.
+    pub fn load(path: PathBuf) -> Result<Self> {
+        // Run MetadataCommand once, using either current_dir or manifest_path
+        let metadata = if path.is_dir() {
+            // Use cargo_metadata to find the manifest, which will walk up from current_dir
+            MetadataCommand::new().current_dir(&path).exec()?
+        } else if path.file_name().and_then(|n| n.to_str()) == Some("Cargo.toml") {
+            // It's already a Cargo.toml path
+            if !path.exists() {
+                return Err(anyhow!("Cargo.toml not found at {}", path.display()));
+            }
+            MetadataCommand::new().manifest_path(&path).exec()?
+        } else {
             return Err(anyhow!(
-                "Not a Rust project: Cargo.toml not found in {}",
-                manifest_path.display()
+                "Path must be a directory or Cargo.toml file, got: {}",
+                path.display()
             ));
-        }
+        };
+
+        // Get the manifest path from metadata (workspace root)
+        let manifest_path: PathBuf = metadata.workspace_root.join("Cargo.toml").into();
 
         let manifest = Manifest::from_path(&manifest_path)?;
         let project_root = manifest_path
             .parent()
             .ok_or_else(|| anyhow!("Invalid manifest path"))?;
 
-        let target_dir = project_root.join("target");
-
-        let metadata = MetadataCommand::new()
-            .manifest_path(&manifest_path)
-            .exec()?;
+        let target_dir: PathBuf = project_root.join("target");
 
         let workspace_packages = metadata
             .workspace_packages()

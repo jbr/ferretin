@@ -1,9 +1,17 @@
 //! A minimal test crate for rustdoc JSON MCP testing
 
+// Use statements for testing intra-doc link resolution
+use std::collections::HashMap;
+use std::result::Result as StdResult;
+use std::vec::Vec as Vector;
+
 /// A simple struct for testing basic functionality.
 ///
 /// This struct demonstrates basic usage patterns and should show completely
 /// since it only has one paragraph of documentation.
+///
+/// It uses [`Vector`] for testing intra-doc link resolution with renamed imports.
+/// Also tests [`HashMap`] which is a non-renamed import.
 #[derive(Debug, Clone)]
 pub struct TestStruct {
     /// A public field
@@ -172,13 +180,20 @@ pub mod submodule {
     }
 
     /// An enum for testing
+    ///
+    /// This is like [`crate::GenericEnum`] but without the generic
     pub enum TestEnum {
-        /// Variant A
+        /// Variant A (see also [`crate::GenericEnum`])
         VariantA,
         /// Variant B with data
         VariantB(String),
-        /// Variant C with struct data
-        VariantC { name: String, value: i32 },
+        /// Variant C with struct data (`name` and `value`)
+        VariantC {
+            /// Documentation for the name field
+            name: String,
+            /// Documentation for value
+            value: i32,
+        },
     }
 
     pub use TestEnum::*;
@@ -201,6 +216,8 @@ pub struct TupleStruct(
 );
 
 /// A generic enum for testing
+///
+/// See also [`crate::TestEnum`]
 pub enum GenericEnum<T, U = String>
 where
     T: Clone + Send,
@@ -211,7 +228,11 @@ where
     /// Variant with generic data
     WithData(T),
     /// Variant with mixed generics
-    Mixed { data: T, info: U },
+    Mixed {
+        data: T,
+        /// Info can be any U as long as it's [`std::fmt::Display`]
+        info: U,
+    },
 }
 
 /// A more complex trait demonstrating various features
@@ -237,6 +258,61 @@ where
     fn transform<U>(&self, data: U) -> Result<T, String>
     where
         U: Into<T>;
+}
+
+/// Module for testing intra-doc link resolution
+pub mod link_resolution_tests {
+    pub use super::TestStruct as RenamedTestStruct;
+    pub use super::submodule::SubStruct;
+    pub use std::collections::BTreeMap as Tree;
+    pub use std::collections::HashSet;
+
+    /// Struct in link test module
+    pub struct LinkTestStruct {
+        /// Field in link test struct
+        pub data: String,
+    }
+
+    impl LinkTestStruct {
+        /// Method for testing Self resolution
+        pub fn new() -> Self {
+            Self {
+                data: String::new(),
+            }
+        }
+
+        /// Another method
+        pub fn get_data(&self) -> &str {
+            &self.data
+        }
+    }
+
+    /// Nested module for testing scoped resolution
+    pub mod nested {
+        pub use super::super::TestTrait;
+        pub use std::string::String as Str;
+
+        /// Struct in nested module
+        pub struct NestedStruct {
+            /// Field
+            pub value: i32,
+        }
+
+        impl NestedStruct {
+            /// Create new NestedStruct
+            pub fn new(value: i32) -> Self {
+                Self { value }
+            }
+        }
+
+        /// Another nested module
+        pub mod deeply_nested {
+            use super::super::LinkTestStruct;
+
+            /// Struct in deeply nested module
+            pub struct DeepStruct;
+        }
+    }
 }
 
 pub use std::vec::Vec;
