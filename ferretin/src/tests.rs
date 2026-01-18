@@ -4,7 +4,7 @@ use crate::{
     renderer::{OutputMode, render},
     request::Request,
 };
-use rustdoc_core::RustdocProject;
+use ferretin_common::RustdocProject;
 use std::path::PathBuf;
 
 /// Get the path to our test crate (fast to build, minimal dependencies)

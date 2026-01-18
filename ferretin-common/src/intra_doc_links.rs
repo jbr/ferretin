@@ -155,8 +155,25 @@ fn resolve_path<'a>(
     }
 
     // Fallback: Try direct path resolution (for absolute paths like "std::vec::Vec")
+    // Handle "crate::", "self::", "super::" and unqualified paths
     let mut suggestions = vec![];
-    navigator.resolve_path(path, &mut suggestions)
+    let qualified_path = if let Some(rest) = path.strip_prefix("crate::") {
+        // crate::Type -> current_crate::Type
+        format!("{}::{}", origin.crate_docs().name, rest)
+    } else if let Some(rest) = path.strip_prefix("self::") {
+        // self::Type -> current_crate::Type (within the same module)
+        // TODO: This should really be current_module::Type but we don't have that context
+        format!("{}::{}", origin.crate_docs().name, rest)
+    } else if path.contains("::") {
+        // Already qualified (e.g., "std::vec::Vec")
+        // Note: super:: is tricky - would need module path context
+        path.to_string()
+    } else {
+        // Relative path (e.g., "Runtime"), qualify it with the current crate
+        format!("{}::{}", origin.crate_docs().name, path)
+    };
+
+    navigator.resolve_path(&qualified_path, &mut suggestions)
 }
 
 #[cfg(test)]

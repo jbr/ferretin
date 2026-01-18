@@ -14,6 +14,7 @@ use walkdir::WalkDir;
 
 use crate::crate_name::CrateName;
 use crate::doc_ref::{self, DocRef};
+use crate::docsrs_client::DocsRsClient;
 use crate::navigator::Navigator;
 
 pub const RUST_CRATES: [CrateName<'_>; 5] = [
@@ -23,6 +24,123 @@ pub const RUST_CRATES: [CrateName<'_>; 5] = [
     CrateName("proc_macro"),
     CrateName("test"),
 ];
+
+/// Key for identifying crates in the working set
+/// Version is None for workspace/local crates, Some(semver) for published crates
+pub type CrateKey = (String, Option<String>);
+
+/// Metadata about the local workspace - doesn't own documentation data
+/// This can be cached to disk with content hash over Cargo.lock/Cargo.toml
+#[derive(Debug, Clone)]
+pub struct LocalContext {
+    manifest_path: PathBuf,
+    // commented out because currently unused
+    //    metadata: Metadata,
+    workspace_packages: Vec<String>,
+    /// Resolved dependencies from Cargo.lock
+    /// Maps crate name to (version, is_crates_io)
+    /// version is None for path/workspace deps
+    resolved_deps: BTreeMap<String, (Option<String>, bool)>,
+}
+
+impl LocalContext {
+    /// Create a new LocalContext from a manifest path
+    pub fn load(path: PathBuf) -> Result<Self> {
+        let metadata = if path.is_dir() {
+            MetadataCommand::new().current_dir(&path).exec()?
+        } else if path.file_name().and_then(|n| n.to_str()) == Some("Cargo.toml") {
+            if !path.exists() {
+                return Err(anyhow!("Cargo.toml not found at {}", path.display()));
+            }
+            MetadataCommand::new().manifest_path(&path).exec()?
+        } else {
+            return Err(anyhow!(
+                "Path must be a directory or Cargo.toml file, got: {}",
+                path.display()
+            ));
+        };
+
+        let manifest_path: PathBuf = metadata.workspace_root.join("Cargo.toml").into();
+
+        let workspace_packages: Vec<String> = metadata
+            .workspace_packages()
+            .iter()
+            .map(|package| package.name.to_string())
+            .collect();
+
+        // Build resolved_deps from metadata
+        let mut resolved_deps = BTreeMap::new();
+        for package in &metadata.packages {
+            // Only include dependencies, not workspace members
+            if !workspace_packages.contains(&package.name) {
+                // Determine if it's from crates.io (has no path, no git)
+                let is_crates_io = package
+                    .source
+                    .as_ref()
+                    .map(|s| s.repr.starts_with("registry+"))
+                    .unwrap_or(false);
+
+                let version = if is_crates_io {
+                    Some(package.version.to_string())
+                } else {
+                    None
+                };
+
+                resolved_deps.insert(package.name.to_string(), (version, is_crates_io));
+            }
+        }
+
+        Ok(Self {
+            manifest_path,
+            //            metadata,
+            workspace_packages,
+            resolved_deps,
+        })
+    }
+
+    /// Check if a crate name is a workspace package
+    pub fn is_workspace_package(&self, crate_name: &str) -> bool {
+        self.workspace_packages
+            .iter()
+            .any(|c| eq_ignoring_dash_underscore(c, crate_name))
+    }
+
+    /// Get the resolved version for a dependency
+    /// Returns None if not a dependency or if it's a path/workspace dep
+    pub fn get_dependency_version(&self, crate_name: &str) -> Option<&str> {
+        self.resolved_deps
+            .iter()
+            .find(|(name, _)| eq_ignoring_dash_underscore(name, crate_name))
+            .and_then(|(_, (version, _))| version.as_deref())
+    }
+
+    /// Get all workspace package names
+    pub fn workspace_packages(&self) -> &[String] {
+        &self.workspace_packages
+    }
+
+    /// Get the manifest path
+    pub fn manifest_path(&self) -> &Path {
+        &self.manifest_path
+    }
+
+    /// Get the project root
+    pub fn project_root(&self) -> &Path {
+        self.manifest_path.parent().unwrap_or(&self.manifest_path)
+    }
+
+    /// Get an iterator over resolved dependencies
+    pub fn dependencies(&self) -> impl Iterator<Item = (&String, &(Option<String>, bool))> {
+        self.resolved_deps.iter()
+    }
+}
+
+/// Get the cache directory for rustdoc JSON files
+///
+/// Uses `{CARGO_HOME}/rustdoc-json/` as the cache location
+fn docsrs_cache_dir() -> Result<PathBuf> {
+    Ok(home::cargo_home()?.join("rustdoc-json"))
+}
 
 /// Manages a Cargo project and its rustdoc JSON files
 #[derive(Fieldwork)]
@@ -38,6 +156,8 @@ pub struct RustdocProject {
     #[field = false]
     available_crates: Vec<String>,
     rustc_docs: Option<(PathBuf, String)>,
+    #[field = false]
+    docsrs_client: Option<DocsRsClient>,
 }
 
 impl Debug for RustdocProject {
@@ -129,7 +249,7 @@ impl RustdocProject {
 
         let target_dir: PathBuf = project_root.join("target");
 
-        let workspace_packages = metadata
+        let workspace_packages: Vec<String> = metadata
             .workspace_packages()
             .iter()
             .map(|package| package.name.to_string())
@@ -137,15 +257,34 @@ impl RustdocProject {
 
         let rustc_docs = rustc_docs();
 
+        // Initialize DocsRsClient for fetching from docs.rs
+        // This is optional - if it fails, we just won't have remote fetching capability
+        let docsrs_client = docsrs_cache_dir()
+            .and_then(|cache_dir| {
+                log::debug!(
+                    "Initializing DocsRsClient with cache dir: {}",
+                    cache_dir.display()
+                );
+                DocsRsClient::new(cache_dir)
+            })
+            .ok();
+
+        if docsrs_client.is_some() {
+            log::debug!("DocsRsClient initialized successfully");
+        } else {
+            log::warn!("Failed to initialize docs.rs client, remote fetching will be disabled");
+        }
+
         let mut project = Self {
             manifest_path,
             manifest,
             target_dir,
             metadata,
             crate_info: vec![],
-            workspace_packages,
+            workspace_packages: workspace_packages.into(),
             available_crates: vec![],
             rustc_docs,
+            docsrs_client,
         };
 
         project.crate_info = project.generate_crate_info();
@@ -159,7 +298,7 @@ impl RustdocProject {
     pub(crate) fn resolve_json_path<'a>(
         &'a self,
         crate_name: CrateName<'a>,
-    ) -> Option<(PathBuf, CrateType)> {
+    ) -> Option<(PathBuf, CrateProvenance)> {
         let doc_dir = self.target_dir.join("doc");
 
         if RUST_CRATES.contains(&crate_name)
@@ -167,7 +306,7 @@ impl RustdocProject {
         {
             Some((
                 rustc_docs.join(format!("{crate_name}.json")),
-                CrateType::Rust,
+                CrateProvenance::Rust,
             ))
         } else if self
             .available_crates()
@@ -177,9 +316,9 @@ impl RustdocProject {
             Some((
                 doc_dir.join(format!("{underscored}.json")),
                 if self.is_workspace_package(crate_name) {
-                    CrateType::Workspace
+                    CrateProvenance::Workspace
                 } else {
-                    CrateType::Library
+                    CrateProvenance::Library
                 },
             ))
         } else {
@@ -231,7 +370,7 @@ impl RustdocProject {
         // Add workspace members
         for package in &workspace_packages {
             crates.push(CrateInfo {
-                crate_type: CrateType::Workspace,
+                crate_type: CrateProvenance::Workspace,
                 name: package.name.to_string(),
                 description: package.description.clone(),
                 version: Some(package.version.to_string()),
@@ -298,7 +437,7 @@ impl RustdocProject {
                 .find(|package| eq_ignoring_dash_underscore(&package.name, &dep_name));
 
             crates.push(CrateInfo {
-                crate_type: CrateType::Library,
+                crate_type: CrateProvenance::Library,
                 version: metadata.map(|p| p.version.to_string()),
                 description: metadata.and_then(|p| p.description.clone()),
                 dev_dep,
@@ -318,7 +457,7 @@ impl RustdocProject {
                 ("test", "Support code for rustc's built in unit-test and micro-benchmarking framework")
             ].map(|(name, description)|{
                 CrateInfo {
-                    crate_type: CrateType::Rust,
+                    crate_type: CrateProvenance::Rust,
                     version: Some(rustc_version.to_string()),
                     description: Some(description.to_string()),
                     dev_dep: false,
@@ -367,7 +506,7 @@ impl RustdocProject {
                     // Include: workspace members + deps used by this member + standard library
                     info.crate_type().is_workspace()
                         || info.used_by().contains(member)
-                        || matches!(info.crate_type(), CrateType::Rust)
+                        || matches!(info.crate_type(), CrateProvenance::Rust)
                 }
                 None => true, // Include all for workspace view
             }
@@ -391,7 +530,7 @@ impl RustdocProject {
         }
     }
 
-    pub fn normalize_crate_name<'a>(&'a self, crate_name: &str) -> Option<CrateName<'a>> {
+    pub fn normalize_crate_name<'a>(&'a self, crate_name: &'a str) -> Option<CrateName<'a>> {
         match crate_name {
             "crate" => {
                 // In workspace contexts (>1 package), don't allow "crate" alias
@@ -412,21 +551,44 @@ impl RustdocProject {
 
             // future-proof: skip internal rustc crates
             name if name.starts_with("rustc_") => None,
-            name => self
-                .available_crates()
-                .find(|correct_name| eq_ignoring_dash_underscore(correct_name, name)),
+            name => {
+                // First try to find in available crates
+                self.available_crates()
+                    .find(|correct_name| eq_ignoring_dash_underscore(correct_name, name))
+                    .or_else(|| {
+                        // If not found in available crates, still return the name so
+                        // load_crate can attempt to fetch from docs.rs
+                        Some(CrateName(name))
+                    })
+            }
         }
     }
 
     /// Load rustdoc data for a specific crate
     pub fn load_crate(&self, crate_name: CrateName<'_>) -> Option<RustdocData> {
-        let (json_path, crate_type) = self.resolve_json_path(crate_name)?;
+        // Parse crate_name@version syntax
+        let (crate_name, version) = if let Some(at_index) = crate_name.find('@') {
+            let name = &crate_name[..at_index];
+            let version = &crate_name[at_index + 1..];
+            (CrateName(name), Some(version))
+        } else {
+            (crate_name, None)
+        };
 
-        match crate_type {
-            CrateType::Workspace => self.load_workspace(crate_name, json_path),
-            CrateType::Library => self.load_dep(crate_name, json_path),
-            CrateType::Rust => self.load_rustc(crate_name, json_path),
+        // Try loading from local files first
+        if let Some((json_path, crate_type)) = self.resolve_json_path(crate_name) {
+            return match crate_type {
+                CrateProvenance::Workspace => self.load_workspace(crate_name, json_path),
+                CrateProvenance::Library => self.load_dep(crate_name, json_path),
+                CrateProvenance::Rust => self.load_rustc(crate_name, json_path),
+                CrateProvenance::DocsRs => {
+                    unreachable!("resolve_json_path should never return DocsRs")
+                }
+            };
         }
+
+        // Fallback: try fetching from docs.rs
+        self.load_from_docsrs(crate_name, version)
     }
 
     pub(crate) fn load_dep(
@@ -456,7 +618,7 @@ impl RustdocProject {
                 break Some(RustdocData {
                     crate_data,
                     name: crate_name.to_string(),
-                    crate_type: CrateType::Library,
+                    crate_type: CrateProvenance::Library,
                     fs_path: json_path,
                 });
             } else if !tried_rebuilding {
@@ -479,11 +641,48 @@ impl RustdocProject {
             Some(RustdocData {
                 crate_data,
                 name: crate_name.to_string(),
-                crate_type: CrateType::Library,
+                crate_type: CrateProvenance::Library,
                 fs_path: json_path,
             })
         } else {
             None
+        }
+    }
+
+    /// Load from docs.rs
+    ///
+    /// This is called when the crate is not found locally. It uses the DocsRsClient
+    /// to fetch the crate from docs.rs and cache it.
+    fn load_from_docsrs(
+        &self,
+        crate_name: CrateName<'_>,
+        version: Option<&str>,
+    ) -> Option<RustdocData> {
+        let client = self.docsrs_client.as_ref()?;
+
+        log::info!(
+            "Crate '{}' not found locally, fetching from docs.rs",
+            crate_name
+        );
+
+        // DocsRsClient requires blocking on async
+        let result = trillium_smol::async_global_executor::block_on(async {
+            client.get_crate(crate_name.as_ref(), version).await
+        });
+
+        match result {
+            Ok(Some(data)) => {
+                log::info!("Successfully fetched '{}' from docs.rs", crate_name);
+                Some(data)
+            }
+            Ok(None) => {
+                log::info!("Crate '{}' not found on docs.rs", crate_name);
+                None
+            }
+            Err(e) => {
+                log::warn!("Failed to fetch '{}' from docs.rs: {}", crate_name, e);
+                None
+            }
         }
     }
 
@@ -513,7 +712,7 @@ impl RustdocProject {
                 break Some(RustdocData {
                     crate_data,
                     name: crate_name.to_string(),
-                    crate_type: CrateType::Library,
+                    crate_type: CrateProvenance::Library,
                     fs_path: json_path,
                 });
             } else if !tried_rebuilding {
@@ -530,7 +729,7 @@ impl RustdocProject {
 #[derive(Debug, Clone, Fieldwork)]
 #[fieldwork(get, rename_predicates)]
 pub struct CrateInfo {
-    crate_type: CrateType,
+    crate_type: CrateProvenance,
     version: Option<String>,
     description: Option<String>,
     dev_dep: bool,
@@ -546,12 +745,13 @@ struct RustdocVersion {
 }
 
 #[derive(Debug, Clone)]
-pub enum CrateType {
+pub enum CrateProvenance {
     Workspace,
     Library,
     Rust,
+    DocsRs,
 }
-impl CrateType {
+impl CrateProvenance {
     pub fn is_workspace(&self) -> bool {
         matches!(self, Self::Workspace)
     }
@@ -561,13 +761,10 @@ impl CrateType {
 #[derive(Clone, Fieldwork)]
 #[fieldwork(get, rename_predicates)]
 pub struct RustdocData {
-    crate_data: Crate,
-
-    name: String,
-
-    crate_type: CrateType,
-
-    fs_path: PathBuf,
+    pub(crate) crate_data: Crate,
+    pub(crate) name: String,
+    pub(crate) crate_type: CrateProvenance,
+    pub(crate) fs_path: PathBuf,
 }
 
 impl Debug for RustdocData {

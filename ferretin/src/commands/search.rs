@@ -1,14 +1,26 @@
 use crate::request::Request;
 use crate::styled_string::{Document, DocumentNode, HeadingLevel, ListItem, Span};
-use rustdoc_core::search::indexer::SearchIndex;
+use ferretin_common::search::indexer::SearchIndex;
 
-pub(crate) fn execute<'a>(request: &'a Request, query: &str, limit: usize) -> (Document<'a>, bool) {
+pub(crate) fn execute<'a>(
+    request: &'a Request,
+    query: &str,
+    limit: usize,
+    crate_: Option<&str>,
+) -> (Document<'a>, bool) {
     // Collect search results from all crates
     let mut all_results = vec![];
 
-    for crate_info in request.project.crate_info(None) {
-        let crate_name = crate_info.name();
+    let crates = match crate_ {
+        Some(crate_) => vec![crate_],
+        None => request
+            .project
+            .crate_info(None)
+            .map(|ci| ci.name())
+            .collect(),
+    };
 
+    for crate_name in crates {
         // Try to load/build the search index for this crate
         match SearchIndex::load_or_build(request, crate_name) {
             Ok(index) => {

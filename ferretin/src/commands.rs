@@ -27,6 +27,10 @@ pub(crate) enum Commands {
         /// Search query
         query: String,
 
+        /// Crate to search
+        #[arg(long = "crate")]
+        crate_: Option<String>,
+
         /// Maximum number of results
         #[arg(short, long, default_value = "10")]
         limit: usize,
@@ -49,6 +53,7 @@ impl Commands {
         Self::Search {
             query: query.to_string(),
             limit: 10,
+            crate_: None,
         }
     }
 
@@ -69,6 +74,17 @@ impl Commands {
         }
     }
 
+    pub fn in_crate(self, crate_: impl Display) -> Self {
+        match self {
+            Self::Search { query, limit, .. } => Self::Search {
+                query,
+                limit,
+                crate_: Some(crate_.to_string()),
+            },
+            other => other,
+        }
+    }
+
     pub fn recursive(self) -> Self {
         match self {
             Self::Get { path, source, .. } => Self::Get {
@@ -82,7 +98,11 @@ impl Commands {
 
     pub fn with_limit(self, limit: usize) -> Self {
         match self {
-            Self::Search { query, .. } => Self::Search { query, limit },
+            Self::Search { query, crate_, .. } => Self::Search {
+                query,
+                limit,
+                crate_,
+            },
             other => other,
         }
     }
@@ -94,7 +114,11 @@ impl Commands {
                 source,
                 recursive,
             } => get::execute(request, &path, source, recursive),
-            Commands::Search { query, limit } => search::execute(request, &query, limit),
+            Commands::Search {
+                query,
+                limit,
+                crate_,
+            } => search::execute(request, &query, limit, crate_.as_deref()),
             Commands::List => list::execute(request),
         }
     }

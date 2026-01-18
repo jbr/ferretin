@@ -1,7 +1,7 @@
 use super::*;
 use crate::styled_string::{DocumentNode, TruncationLevel};
 use crate::{generate_docsrs_url::generate_docsrs_url, markdown::MarkdownRenderer};
-use rustdoc_core::intra_doc_links::{ResolvedLink, resolve_link};
+use ferretin_common::intra_doc_links::{ResolvedLink, resolve_link};
 
 /// Information about documentation text with truncation details
 #[derive(Debug, Clone, Default)]

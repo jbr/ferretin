@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use clap::Parser;
-use rustdoc_core::RustdocProject;
+use ferretin_common::RustdocProject;
 use std::{path::PathBuf, process::ExitCode};
 use terminal_size::{Width, terminal_size};
 

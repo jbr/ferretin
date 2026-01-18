@@ -4,24 +4,30 @@
 //! the same way rustdoc would.
 
 use super::*;
-use crate::{Navigator, RustdocProject};
-use std::rc::Rc;
+use crate::Navigator;
 
 /// Helper to create a Navigator from the test workspace
 fn test_navigator() -> Navigator {
     let manifest_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../tests/test-workspace/Cargo.toml");
-    let project =
-        Rc::new(RustdocProject::load(manifest_path).expect("Failed to load test workspace"));
-    Navigator::new(project)
+
+    Navigator::builder()
+        .with_std_source_if_available()
+        .with_local_context(manifest_path, true)
+        .build()
+        .expect("Failed to build Navigator")
 }
 
 /// Helper to create a Navigator from test-crate with comprehensive use statements
 fn test_crate_navigator() -> Navigator {
     let manifest_path =
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/test-crate/Cargo.toml");
-    let project = Rc::new(RustdocProject::load(manifest_path).expect("Failed to load test-crate"));
-    Navigator::new(project)
+
+    Navigator::builder()
+        .with_std_source_if_available()
+        .with_local_context(manifest_path, true)
+        .build()
+        .expect("Failed to build Navigator")
 }
 
 /// Helper to get a test item by path

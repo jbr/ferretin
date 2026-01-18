@@ -112,7 +112,7 @@ impl Request {
         let mut nodes = vec![];
 
         // Add brief documentation if available
-        if let Some(docs) = self.docs_to_show(flat_item.item, TruncationLevel::SingleLine) {
+        if let Some(docs) = self.docs_to_show(flat_item.item, TruncationLevel::Brief) {
             nodes.push(DocumentNode::Span(Span::plain("\n")));
             nodes.extend(docs);
         }

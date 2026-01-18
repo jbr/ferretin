@@ -1,11 +1,11 @@
-use rustdoc_core::{DocRef, project::CrateType};
+use ferretin_common::{DocRef, project::CrateProvenance};
 use rustdoc_types::{Item, ItemEnum};
 
 pub(crate) fn generate_docsrs_url(item: DocRef<'_, Item>) -> String {
     let docs = item.crate_docs();
     let crate_name = docs.name();
     let version = docs.crate_version.as_deref().unwrap_or("latest");
-    let is_std = matches!(docs.crate_type(), CrateType::Rust);
+    let is_std = matches!(docs.crate_type(), CrateProvenance::Rust);
 
     // Check if this item has its own page (has a path in the paths map)
     if let Some(path) = item.path() {
@@ -20,7 +20,7 @@ fn generate_url_for_item_with_path(
     crate_name: &str,
     version: &str,
     is_std: bool,
-    path: &rustdoc_core::doc_ref::Path<'_>,
+    path: &ferretin_common::doc_ref::Path<'_>,
     item: &DocRef<'_, Item>,
 ) -> String {
     let segments = path.to_string();
@@ -38,7 +38,7 @@ fn generate_url_for_item_with_path(
     let kind = item.kind();
 
     let base = if is_std {
-        format!("http://docs.rust-lang.org/nightly/{crate_name}")
+        String::from("http://docs.rust-lang.org/nightly")
     } else {
         format!("https://docs.rs/{crate_name}/{version}",)
     };

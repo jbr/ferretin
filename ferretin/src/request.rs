@@ -1,12 +1,12 @@
-use rustdoc_core::{Navigator, RustdocProject};
+use ferretin_common::{Navigator, RustdocProject};
 use std::cell::{Ref, RefCell};
 use std::ops::Deref;
-use std::rc::Rc;
 
 use crate::format_context::FormatContext;
 
 /// wrapper around Navigator that adds formatting capabilities
 pub(crate) struct Request {
+    pub(crate) project: RustdocProject,
     navigator: Navigator,
     format_context: RefCell<FormatContext>,
 }
@@ -22,8 +22,19 @@ impl Deref for Request {
 impl Request {
     /// Create a new request for a project
     pub(crate) fn new(project: RustdocProject, format_context: FormatContext) -> Self {
+        let manifest_path = project.manifest_path().to_path_buf();
+
+        // Build Navigator with all sources (local will be loaded lazily)
+        let navigator = Navigator::builder()
+            .with_std_source_if_available()
+            .with_local_context(manifest_path, true) // can rebuild with nightly
+            .with_docsrs_source_if_available()
+            .build()
+            .expect("Failed to build Navigator");
+
         Self {
-            navigator: Navigator::new(Rc::new(project)),
+            project,
+            navigator,
             format_context: RefCell::new(format_context),
         }
     }

@@ -1,6 +1,6 @@
 use crate::request::Request;
 use crate::styled_string::{DocumentNode, Span as StyledSpan, TruncationLevel};
-use rustdoc_core::doc_ref::DocRef;
+use ferretin_common::doc_ref::DocRef;
 use rustdoc_types::{
     Abi, Constant, Enum, Function, FunctionPointer, GenericArg, GenericArgs, GenericBound,
     GenericParamDef, GenericParamDefKind, Generics, Id, Item, ItemEnum, Path, Span, Static, Struct,
