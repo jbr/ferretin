@@ -1,8 +1,7 @@
 use clap::ValueEnum;
 
 /// Controls the verbosity level of documentation display
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Default)]
 pub(crate) enum Verbosity {
     Minimal,
     Brief,
@@ -15,4 +14,3 @@ impl Verbosity {
         matches!(self, Self::Full)
     }
 }
-

@@ -184,8 +184,14 @@ mod unit_tests {
     fn test_disambiguator_parsing() {
         assert_eq!(Disambiguator::from_str("type"), Some(Disambiguator::Type));
         assert_eq!(Disambiguator::from_str("fn"), Some(Disambiguator::Function));
-        assert_eq!(Disambiguator::from_str("function"), Some(Disambiguator::Function));
-        assert_eq!(Disambiguator::from_str("struct"), Some(Disambiguator::Struct));
+        assert_eq!(
+            Disambiguator::from_str("function"),
+            Some(Disambiguator::Function)
+        );
+        assert_eq!(
+            Disambiguator::from_str("struct"),
+            Some(Disambiguator::Struct)
+        );
         assert_eq!(Disambiguator::from_str("invalid"), None);
     }
 }

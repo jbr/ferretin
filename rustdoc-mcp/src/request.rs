@@ -20,8 +20,8 @@ impl Request {
     /// Create a new request for a manifest path
     pub(crate) fn new(manifest_path: PathBuf) -> Self {
         // Load the project (still needed for some MCP-specific operations)
-        let project = RustdocProject::load(manifest_path.clone())
-            .expect("Failed to load RustdocProject");
+        let project =
+            RustdocProject::load(manifest_path.clone()).expect("Failed to load RustdocProject");
 
         // Build Navigator with all sources (local will be loaded lazily)
         let navigator = Navigator::builder()

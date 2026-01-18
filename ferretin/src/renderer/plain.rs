@@ -78,11 +78,14 @@ fn render_node(node: &DocumentNode, output: &mut impl Write) -> Result {
         DocumentNode::Table { header, rows } => {
             // Placeholder for table rendering
             let row_count = rows.len();
-            let col_count = header.as_ref().map_or_else(
-                || rows.first().map_or(0, |r| r.len()),
-                |h| h.len(),
-            );
-            writeln!(output, "[Table: {} columns × {} rows]", col_count, row_count)?;
+            let col_count = header
+                .as_ref()
+                .map_or_else(|| rows.first().map_or(0, |r| r.len()), |h| h.len());
+            writeln!(
+                output,
+                "[Table: {} columns × {} rows]",
+                col_count, row_count
+            )?;
             Ok(())
         }
         DocumentNode::TruncatedBlock { nodes, level } => {
@@ -116,7 +119,10 @@ fn render_node(node: &DocumentNode, output: &mut impl Write) -> Result {
 
 /// Render nodes until first newline
 /// Returns true if we rendered everything (no newline found), false if truncated
-fn render_until_newline(nodes: &[DocumentNode], output: &mut impl Write) -> std::result::Result<bool, std::fmt::Error> {
+fn render_until_newline(
+    nodes: &[DocumentNode],
+    output: &mut impl Write,
+) -> std::result::Result<bool, std::fmt::Error> {
     for node in nodes {
         if !render_node_until_newline(node, output)? {
             return Ok(false); // Truncated
@@ -125,7 +131,10 @@ fn render_until_newline(nodes: &[DocumentNode], output: &mut impl Write) -> std:
     Ok(true) // Rendered everything
 }
 
-fn render_node_until_newline(node: &DocumentNode, output: &mut impl Write) -> std::result::Result<bool, std::fmt::Error> {
+fn render_node_until_newline(
+    node: &DocumentNode,
+    output: &mut impl Write,
+) -> std::result::Result<bool, std::fmt::Error> {
     match node {
         DocumentNode::Span(span) => {
             if let Some(pos) = span.text.find('\n') {
@@ -142,9 +151,7 @@ fn render_node_until_newline(node: &DocumentNode, output: &mut impl Write) -> st
         }
         DocumentNode::Section { nodes, .. }
         | DocumentNode::BlockQuote { nodes }
-        | DocumentNode::TruncatedBlock { nodes, .. } => {
-            render_until_newline(nodes, output)
-        }
+        | DocumentNode::TruncatedBlock { nodes, .. } => render_until_newline(nodes, output),
         DocumentNode::List { .. } | DocumentNode::Table { .. } | DocumentNode::HorizontalRule => {
             // These are multi-line structures, stop here
             Ok(false)
@@ -162,7 +169,10 @@ fn render_node_until_newline(node: &DocumentNode, output: &mut impl Write) -> st
 
 /// Render until first paragraph break (\n\n)
 /// Returns number of remaining paragraphs
-fn render_until_paragraph_break(nodes: &[DocumentNode], output: &mut impl Write) -> std::result::Result<usize, std::fmt::Error> {
+fn render_until_paragraph_break(
+    nodes: &[DocumentNode],
+    output: &mut impl Write,
+) -> std::result::Result<usize, std::fmt::Error> {
     let mut last_was_newline = false;
     let mut found_break = false;
     let mut remaining_paras = 0;
@@ -171,7 +181,8 @@ fn render_until_paragraph_break(nodes: &[DocumentNode], output: &mut impl Write)
         if found_break {
             remaining_paras += count_paragraphs_in_node(node);
         } else {
-            let (stop, last_newline) = render_node_until_paragraph_break(node, output, last_was_newline)?;
+            let (stop, last_newline) =
+                render_node_until_paragraph_break(node, output, last_was_newline)?;
             if stop {
                 found_break = true;
                 remaining_paras = 1; // At least one more paragraph
@@ -195,10 +206,11 @@ fn render_node_until_paragraph_break(
                 return Ok((true, false)); // Found paragraph break
             }
             if span.text.contains("\n\n")
-                && let Some(pos) = span.text.find("\n\n") {
-                    write!(output, "{}", &span.text[..pos])?;
-                    return Ok((true, false)); // Found paragraph break
-                }
+                && let Some(pos) = span.text.find("\n\n")
+            {
+                write!(output, "{}", &span.text[..pos])?;
+                return Ok((true, false)); // Found paragraph break
+            }
             render_span(span, output)?;
             Ok((false, span.text.ends_with('\n')))
         }
@@ -220,7 +232,12 @@ fn count_paragraphs_in_node(node: &DocumentNode) -> usize {
         }
         DocumentNode::List { items } => items
             .iter()
-            .map(|item| item.content.iter().map(count_paragraphs_in_node).sum::<usize>())
+            .map(|item| {
+                item.content
+                    .iter()
+                    .map(count_paragraphs_in_node)
+                    .sum::<usize>()
+            })
             .sum(),
         _ => 0,
     }
