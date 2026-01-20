@@ -36,6 +36,7 @@ struct Cli {
     /// Syntax highlighting theme
     #[arg(
         long,
+        short,
         global = true,
         default_value = "Solarized (dark)",
         env = "FERRETIN_THEME",

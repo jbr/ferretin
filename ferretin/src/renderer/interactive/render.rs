@@ -1,3 +1,4 @@
+use super::theme::InteractiveTheme;
 use super::utils::find_paragraph_truncation_point;
 use crate::format_context::FormatContext;
 use crate::styled_string::{
@@ -20,6 +21,7 @@ pub(super) fn render_document<'a>(
     buf: &mut Buffer,
     scroll: u16,
     cursor_pos: Option<(u16, u16)>,
+    theme: &InteractiveTheme,
 ) -> Vec<(Rect, TuiAction<'a>)> {
     let mut actions = Vec::new();
     let mut row = 0u16;
@@ -44,6 +46,7 @@ pub(super) fn render_document<'a>(
             cursor_pos,
             &mut actions,
             &node_path,
+            theme,
         );
     }
 
@@ -63,6 +66,7 @@ pub(super) fn render_node<'a>(
     cursor_pos: Option<(u16, u16)>,
     actions: &mut Vec<(Rect, TuiAction<'a>)>,
     path: &crate::styled_string::NodePath,
+    theme: &InteractiveTheme,
 ) {
     match node {
         DocumentNode::Span(span) => {
@@ -170,6 +174,7 @@ pub(super) fn render_node<'a>(
                         cursor_pos,
                         actions,
                         &content_path,
+                        theme,
                     );
                 }
 
@@ -218,6 +223,7 @@ pub(super) fn render_node<'a>(
                     cursor_pos,
                     actions,
                     &child_path,
+                    theme,
                 );
             }
         }
@@ -308,6 +314,7 @@ pub(super) fn render_node<'a>(
                     cursor_pos,
                     actions,
                     &child_path,
+                    theme,
                 );
             }
         }
@@ -371,6 +378,7 @@ pub(super) fn render_node<'a>(
                     cursor_pos,
                     actions,
                     &child_path,
+                    theme,
                 );
 
                 // If this is the last node, we rendered everything
@@ -386,7 +394,7 @@ pub(super) fn render_node<'a>(
                 let ellipsis_text = " [...]";
 
                 // Style for dimmed ellipsis
-                let style = Style::default().fg(Color::DarkGray);
+                let style = theme.muted_style;
 
                 // Check if hovered
                 let is_hovered = cursor_pos.map_or_else(

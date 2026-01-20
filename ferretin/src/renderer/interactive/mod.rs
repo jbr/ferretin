@@ -1,16 +1,23 @@
 mod events;
 mod render;
 mod state;
+mod theme;
 mod ui;
 mod utils;
 
 use events::handle_action;
+use ferretin_common::DocRef;
 use render::render_document;
+use rustdoc_types::Item;
 use state::{HistoryEntry, InputMode};
+use theme::InteractiveTheme;
 use ui::{render_breadcrumb_bar, render_help_screen, render_status_bar};
 use utils::{set_cursor_shape, supports_cursor_shape};
 
-use crate::styled_string::Document;
+use crate::{
+    request::Request,
+    styled_string::{Document, TuiAction},
+};
 use crossterm::{
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers, MouseEvent,
@@ -20,13 +27,16 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, backend::CrosstermBackend, layout::Position};
-use std::io::{self, stdout};
+use std::{
+    io::{self, stdout},
+    time::Duration,
+};
 
 /// Render a document in interactive mode with scrolling and hover tracking
 pub fn render_interactive<'a>(
     initial_document: &mut Document<'a>,
-    request: &'a crate::request::Request,
-    initial_item: Option<ferretin_common::DocRef<'a, rustdoc_types::Item>>,
+    request: &'a Request,
+    initial_item: Option<DocRef<'a, Item>>,
 ) -> io::Result<()> {
     let document = initial_document;
 
@@ -46,6 +56,9 @@ pub fn render_interactive<'a>(
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
+
+    // Build theme once at startup
+    let interactive_theme = InteractiveTheme::from_format_context(&request.format_context());
 
     // Track scroll position and cursor
     let mut scroll_offset = 0u16;
@@ -92,8 +105,19 @@ pub fn render_interactive<'a>(
             if show_help {
                 // Render help screen (covers entire area including status bars)
                 let help_area = frame.area();
-                render_help_screen(frame.buffer_mut(), help_area);
+                render_help_screen(frame.buffer_mut(), help_area, &interactive_theme);
             } else {
+                // Clear main area with theme background
+                for y in 0..main_area.height {
+                    for x in 0..main_area.width {
+                        frame
+                            .buffer_mut()
+                            .cell_mut((x, y))
+                            .unwrap()
+                            .set_style(interactive_theme.document_bg_style);
+                    }
+                }
+
                 // Render main document
                 actions = render_document(
                     &document.nodes,
@@ -102,6 +126,7 @@ pub fn render_interactive<'a>(
                     frame.buffer_mut(),
                     scroll_offset,
                     cursor_pos,
+                    &interactive_theme,
                 );
 
                 // Render breadcrumb bar with full history
@@ -113,6 +138,7 @@ pub fn render_interactive<'a>(
                     history_index,
                     &mut breadcrumb_clickable_areas,
                     breadcrumb_hover_pos,
+                    &interactive_theme,
                 );
 
                 // Get current crate name for search scope display
@@ -129,6 +155,7 @@ pub fn render_interactive<'a>(
                     &input_buffer,
                     search_all_crates,
                     current_crate,
+                    &interactive_theme,
                 );
             }
         })?;
@@ -166,7 +193,7 @@ pub fn render_interactive<'a>(
                     .find(|(rect, _)| rect.contains(Position::new(pos.0, pos.1)))
                 {
                     debug_message = match action {
-                        crate::styled_string::TuiAction::Navigate(doc_ref) => {
+                        TuiAction::Navigate(doc_ref) => {
                             if let Some(path) = doc_ref.path() {
                                 format!("Navigate: {}", path)
                             } else if let Some(name) = doc_ref.name() {
@@ -175,13 +202,13 @@ pub fn render_interactive<'a>(
                                 "Navigate: <unknown>".to_string()
                             }
                         }
-                        crate::styled_string::TuiAction::NavigateToPath(path) => {
+                        TuiAction::NavigateToPath(path) => {
                             format!("Go to: {}", path)
                         }
-                        crate::styled_string::TuiAction::ExpandBlock(path) => {
+                        TuiAction::ExpandBlock(path) => {
                             format!("Expand: {:?}", path.indices())
                         }
-                        crate::styled_string::TuiAction::OpenUrl(url) => {
+                        TuiAction::OpenUrl(url) => {
                             format!("Open: {}", url)
                         }
                     };
@@ -207,14 +234,13 @@ pub fn render_interactive<'a>(
                 debug_message = format!(
                     "Clicked: {:?}",
                     match &action {
-                        crate::styled_string::TuiAction::Navigate(doc_ref) => doc_ref
+                        TuiAction::Navigate(doc_ref) => doc_ref
                             .path()
                             .map(|p| p.to_string())
                             .unwrap_or_else(|| "unknown".to_string()),
-                        crate::styled_string::TuiAction::NavigateToPath(path) => path.clone(),
-                        crate::styled_string::TuiAction::ExpandBlock(path) =>
-                            format!("{:?}", path.indices()),
-                        crate::styled_string::TuiAction::OpenUrl(url) => url.clone(),
+                        TuiAction::NavigateToPath(path) => path.clone(),
+                        TuiAction::ExpandBlock(path) => format!("{:?}", path.indices()),
+                        TuiAction::OpenUrl(url) => url.clone(),
                     }
                 );
 
@@ -244,7 +270,7 @@ pub fn render_interactive<'a>(
         }
 
         // Handle events with timeout for hover updates
-        if event::poll(std::time::Duration::from_millis(50))? {
+        if event::poll(Duration::from_millis(50))? {
             match event::read()? {
                 Event::Key(key) => {
                     // Always allow Escape to exit help, cancel input mode, or quit
