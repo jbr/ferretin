@@ -232,7 +232,11 @@ pub(super) fn render_help_screen(buf: &mut Buffer, area: Rect) {
         ("Commands:", "", title_style),
         ("  g", "Go to item by path", key_style),
         ("  s", "Search (scoped to current crate)", key_style),
-        ("    Tab", "  Toggle search scope (current/all crates)", key_style),
+        (
+            "    Tab",
+            "  Toggle search scope (current/all crates)",
+            key_style,
+        ),
         ("  Esc", "Cancel input mode / Exit help / Quit", key_style),
         ("", "", bg_style),
         ("Mouse:", "", title_style),

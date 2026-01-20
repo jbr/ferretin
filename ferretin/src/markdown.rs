@@ -349,11 +349,17 @@ mod tests {
             assert_eq!(items.len(), 2, "Expected 2 list items");
 
             // First item should contain a link
-            let first_has_link = items[0].content.iter().any(|n| matches!(n, DocumentNode::Link { .. }));
+            let first_has_link = items[0]
+                .content
+                .iter()
+                .any(|n| matches!(n, DocumentNode::Link { .. }));
             assert!(first_has_link, "First list item should contain a link");
 
             // Second item should contain a link
-            let second_has_link = items[1].content.iter().any(|n| matches!(n, DocumentNode::Link { .. }));
+            let second_has_link = items[1]
+                .content
+                .iter()
+                .any(|n| matches!(n, DocumentNode::Link { .. }));
             assert!(second_has_link, "Second list item should contain a link");
         } else {
             panic!("Expected a List node");

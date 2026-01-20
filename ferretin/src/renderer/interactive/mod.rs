@@ -17,9 +17,9 @@ use crossterm::{
         MouseEventKind,
     },
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{backend::CrosstermBackend, layout::Position, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend, layout::Position};
 use std::io::{self, stdout};
 
 /// Render a document in interactive mode with scrolling and hover tracking
@@ -57,8 +57,7 @@ pub fn render_interactive<'a>(
     let supports_cursor = supports_cursor_shape();
     let mut is_hovering = false;
     let mut mouse_enabled = true;
-    let mut debug_message =
-        String::from("ferretin - q:quit ?:help ←/→:history g:go s:search");
+    let mut debug_message = String::from("ferretin - q:quit ?:help ←/→:history g:go s:search");
 
     // Input mode state
     let mut input_mode = InputMode::Normal;
@@ -256,8 +255,7 @@ pub fn render_interactive<'a>(
                             input_mode = InputMode::Normal;
                             input_buffer.clear();
                             debug_message =
-                                "ferretin - q:quit ?:help ←/→:history g:go s:search"
-                                    .to_string();
+                                "ferretin - q:quit ?:help ←/→:history g:go s:search".to_string();
                         } else {
                             break Ok(());
                         }
