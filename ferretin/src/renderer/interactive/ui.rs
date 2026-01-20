@@ -1,9 +1,6 @@
 use super::state::{HistoryEntry, InputMode};
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Color, Modifier, Style},
-};
+use super::theme::InteractiveTheme;
+use ratatui::{buffer::Buffer, layout::Rect};
 
 /// Render breadcrumb bar showing full navigation history
 pub(super) fn render_breadcrumb_bar<'a>(
@@ -13,8 +10,9 @@ pub(super) fn render_breadcrumb_bar<'a>(
     current_idx: usize,
     clickable_areas: &mut Vec<(usize, std::ops::Range<u16>)>,
     hover_pos: Option<(u16, u16)>,
+    theme: &InteractiveTheme,
 ) {
-    let bg_style = Style::default().bg(Color::Blue).fg(Color::White);
+    let bg_style = theme.breadcrumb_style;
 
     // Clear the breadcrumb line
     for x in 0..area.width {
@@ -85,13 +83,13 @@ pub(super) fn render_breadcrumb_bar<'a>(
 
         let item_style = if is_hovered {
             // Hovered: reversed colors for visual feedback
-            bg_style.add_modifier(Modifier::REVERSED)
+            theme.breadcrumb_hover_style
         } else if idx == current_idx {
             // Current item: italic
-            bg_style.add_modifier(Modifier::ITALIC)
+            theme.breadcrumb_current_style
         } else {
             // Other items: normal
-            bg_style
+            theme.breadcrumb_style
         };
 
         for ch in name.chars() {
@@ -121,9 +119,10 @@ pub(super) fn render_status_bar(
     input_buffer: &str,
     search_all_crates: bool,
     current_crate: Option<&str>,
+    theme: &InteractiveTheme,
 ) {
-    let style = Style::default().bg(Color::DarkGray).fg(Color::White);
-    let hint_style = Style::default().bg(Color::DarkGray).fg(Color::Gray);
+    let style = theme.status_style;
+    let hint_style = theme.status_hint_style;
 
     // Clear the status line
     for x in 0..area.width {
@@ -196,17 +195,11 @@ pub(super) fn render_status_bar(
 }
 
 /// Render help screen showing all available keybindings
-pub(super) fn render_help_screen(buf: &mut Buffer, area: Rect) {
-    let bg_style = Style::default().bg(Color::Black).fg(Color::White);
-    let title_style = Style::default()
-        .bg(Color::Black)
-        .fg(Color::Cyan)
-        .add_modifier(Modifier::BOLD);
-    let key_style = Style::default()
-        .bg(Color::Black)
-        .fg(Color::Yellow)
-        .add_modifier(Modifier::BOLD);
-    let desc_style = Style::default().bg(Color::Black).fg(Color::White);
+pub(super) fn render_help_screen(buf: &mut Buffer, area: Rect, theme: &InteractiveTheme) {
+    let bg_style = theme.help_bg_style;
+    let title_style = theme.help_title_style;
+    let key_style = theme.help_key_style;
+    let desc_style = theme.help_desc_style;
 
     // Clear the entire screen
     for y in 0..area.height {
