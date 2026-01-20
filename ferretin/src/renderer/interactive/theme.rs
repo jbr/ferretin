@@ -31,6 +31,9 @@ pub(super) struct InteractiveTheme {
 
     /// Document background style
     pub document_bg_style: Style,
+
+    /// Code block border style
+    pub code_block_border_style: Style,
 }
 
 impl InteractiveTheme {
@@ -49,6 +52,7 @@ impl InteractiveTheme {
         let muted_fg = derive_muted_fg(settings, default_fg);
         let accent_fg = derive_accent_fg(settings, default_fg);
         let secondary_accent_fg = derive_secondary_accent_fg(settings, accent_fg);
+        let code_block_border = derive_code_block_border(settings, muted_fg);
 
         Self {
             breadcrumb_style: Style::default()
@@ -90,6 +94,8 @@ impl InteractiveTheme {
             document_bg_style: Style::default()
                 .bg(to_ratatui(default_bg))
                 .fg(to_ratatui(default_fg)),
+
+            code_block_border_style: Style::default().fg(to_ratatui(code_block_border)),
         }
     }
 }
@@ -177,4 +183,9 @@ fn derive_secondary_accent_fg(settings: &ThemeSettings, accent: Color) -> Color 
             a: accent.a,
         }
     })
+}
+
+/// Derive code block border color
+fn derive_code_block_border(settings: &ThemeSettings, muted_fg: Color) -> Color {
+    settings.guide.unwrap_or(muted_fg)
 }
