@@ -1,27 +1,24 @@
 use crate::styled_string::{DocumentNode, HeadingLevel, Span, SpanStyle};
+use ferretin_common::DocRef;
 use pulldown_cmark::{BrokenLink, CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
-use regex::Regex;
+use rustdoc_types::Item;
 
 pub struct MarkdownRenderer;
 
 impl MarkdownRenderer {
     pub fn render_with_resolver<'a, F>(markdown: &str, link_resolver: F) -> Vec<DocumentNode<'a>>
     where
-        F: Fn(&str) -> Option<String>,
+        F: Fn(&str) -> Option<(String, DocRef<'a, Item>)>,
     {
-        // Preprocess: Convert [`Type`] to [Type] so pulldown-cmark sees it as a broken link
-        // This regex matches [`...`] and captures the content between backticks
-        let backtick_link_re = Regex::new(r"\[`([^`]+)`\]").unwrap();
-        let preprocessed = backtick_link_re.replace_all(markdown, "[$1]");
-
-        // Use broken_link_callback to resolve intra-doc links like [Type] and [`Type`]
         let callback = |broken_link: BrokenLink| {
-            link_resolver(broken_link.reference.as_ref())
-                .map(|url| (url.into(), broken_link.reference.to_string().into()))
+            Some((
+                broken_link.reference.trim_matches('`').to_string().into(),
+                broken_link.reference.clone().into_static(),
+            ))
         };
 
         let parser =
-            Parser::new_with_broken_link_callback(&preprocessed, Options::empty(), Some(&callback));
+            Parser::new_with_broken_link_callback(markdown, Options::empty(), Some(&callback));
 
         let mut nodes: Vec<DocumentNode<'a>> = Vec::new();
         let mut current_spans: Vec<Span<'a>> = Vec::new();
@@ -35,8 +32,12 @@ impl MarkdownRenderer {
         let mut in_strikethrough = false;
         let mut in_heading = false;
         let mut heading_level: Option<HeadingLevel> = None;
-        let mut current_link_url: Option<String> = None;
+        let mut current_link_url: Option<(String, Option<DocRef<'a, Item>>)> = None;
         let mut link_spans: Vec<Span<'a>> = Vec::new();
+        let mut in_list = false;
+        let mut list_items: Vec<crate::styled_string::ListItem<'a>> = Vec::new();
+        let mut in_item = false;
+        let mut item_spans: Vec<Span<'a>> = Vec::new();
 
         for event in parser {
             match event {
@@ -66,7 +67,8 @@ impl MarkdownRenderer {
                     }
                     Tag::Link { dest_url, .. } => {
                         let resolved_url = link_resolver(dest_url.as_ref())
-                            .unwrap_or_else(|| dest_url.to_string());
+                            .map(|(link, item)| (link, Some(item)))
+                            .unwrap_or_else(|| (dest_url.to_string(), None));
                         current_link_url = Some(resolved_url);
                     }
                     Tag::Heading { level, .. } => {
@@ -77,18 +79,29 @@ impl MarkdownRenderer {
                             _ => HeadingLevel::Section,
                         });
                     }
-                    Tag::Paragraph | Tag::BlockQuote(_) | Tag::List(_) | Tag::Item => {
+                    Tag::List(_) => {
+                        in_list = true;
+                        list_items.clear();
+                    }
+                    Tag::Item => {
+                        in_item = true;
+                        item_spans.clear();
+                    }
+                    Tag::Paragraph | Tag::BlockQuote(_) => {
                         // These will be handled in TagEnd
                     }
                     _ => {}
                 },
                 Event::End(tag_end) => match tag_end {
                     TagEnd::Paragraph => {
-                        // Flush current spans and add paragraph break
-                        for span in current_spans.drain(..) {
-                            nodes.push(DocumentNode::Span(span));
+                        // Skip paragraph handling inside list items (handled by Item end)
+                        if !in_item {
+                            // Flush current spans and add paragraph break
+                            for span in current_spans.drain(..) {
+                                nodes.push(DocumentNode::Span(span));
+                            }
+                            nodes.push(DocumentNode::Span(Span::plain("\n\n")));
                         }
-                        nodes.push(DocumentNode::Span(Span::plain("\n\n")));
                     }
                     TagEnd::Heading(_level) => {
                         if in_heading {
@@ -126,7 +139,7 @@ impl MarkdownRenderer {
                         in_strikethrough = false;
                     }
                     TagEnd::Link => {
-                        if let Some(url) = current_link_url.take() {
+                        if let Some((url, item)) = current_link_url.take() {
                             // Flush current_spans to preserve order
                             for span in current_spans.drain(..) {
                                 nodes.push(DocumentNode::Span(span));
@@ -136,6 +149,7 @@ impl MarkdownRenderer {
                             nodes.push(DocumentNode::Link {
                                 url,
                                 text: link_text,
+                                item,
                             });
                         }
                     }
@@ -143,6 +157,33 @@ impl MarkdownRenderer {
                         // Simplified: just treat as plain text for now
                         for span in current_spans.drain(..) {
                             nodes.push(DocumentNode::Span(span));
+                        }
+                    }
+                    TagEnd::List(_) => {
+                        if in_list {
+                            // Flush current spans before list
+                            for span in current_spans.drain(..) {
+                                nodes.push(DocumentNode::Span(span));
+                            }
+
+                            // Create the list node
+                            let items = std::mem::take(&mut list_items);
+                            nodes.push(DocumentNode::List { items });
+                            in_list = false;
+                        }
+                    }
+                    TagEnd::Item => {
+                        if in_item {
+                            // Create list item from collected spans
+                            let spans = std::mem::take(&mut item_spans);
+                            list_items.push(crate::styled_string::ListItem::new(vec![
+                                DocumentNode::Span(Span {
+                                    text: spans.iter().map(|s| s.text.as_ref()).collect::<Vec<_>>().join("").into(),
+                                    style: SpanStyle::Plain,
+                                    action: None,
+                                })
+                            ]));
+                            in_item = false;
                         }
                     }
                     _ => {}
@@ -164,10 +205,13 @@ impl MarkdownRenderer {
                         let span = Span {
                             text: text.to_string().into(),
                             style,
+                            action: None,
                         };
 
                         if current_link_url.is_some() {
                             link_spans.push(span);
+                        } else if in_item {
+                            item_spans.push(span);
                         } else {
                             current_spans.push(span);
                         }
@@ -177,6 +221,8 @@ impl MarkdownRenderer {
                     let span = Span::inline_code(code.to_string());
                     if current_link_url.is_some() {
                         link_spans.push(span);
+                    } else if in_item {
+                        item_spans.push(span);
                     } else {
                         current_spans.push(span);
                     }
@@ -185,6 +231,8 @@ impl MarkdownRenderer {
                     let span = Span::plain(" ");
                     if current_link_url.is_some() {
                         link_spans.push(span);
+                    } else if in_item {
+                        item_spans.push(span);
                     } else {
                         current_spans.push(span);
                     }
@@ -193,6 +241,8 @@ impl MarkdownRenderer {
                     let span = Span::plain("\n");
                     if current_link_url.is_some() {
                         link_spans.push(span);
+                    } else if in_item {
+                        item_spans.push(span);
                     } else {
                         current_spans.push(span);
                     }

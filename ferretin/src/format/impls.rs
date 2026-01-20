@@ -21,7 +21,7 @@ struct TraitImpl {
 impl Request {
     /// Add associated methods for a struct or enum
     pub(super) fn format_associated_methods<'a>(
-        &self,
+        &'a self,
         item: DocRef<'a, Item>,
     ) -> Vec<DocumentNode<'a>> {
         let mut doc_nodes = vec![];
@@ -42,7 +42,7 @@ impl Request {
     }
 
     fn format_item_list<'a>(
-        &self,
+        &'a self,
         mut items: Vec<DocRef<'a, Item>>,
         title: &'a str,
     ) -> Vec<DocumentNode<'a>> {
@@ -107,7 +107,7 @@ impl Request {
                 // For functions, show the signature inline
                 if let ItemEnum::Function(inner) = &item.item().inner {
                     let signature_spans: Vec<DocumentNode> = self
-                        .format_function_signature(name, inner)
+                        .format_function_signature(*item, name, inner)
                         .into_iter()
                         .map(DocumentNode::Span)
                         .collect();
@@ -156,7 +156,7 @@ impl Request {
     /// Format trait implementations with explicit category groups
     fn format_trait_implementations<'a>(
         &self,
-        trait_impls: &[DocRef<'_, Item>],
+        trait_impls: &[DocRef<'a, Item>],
     ) -> Vec<DocumentNode<'a>> {
         let mut crate_local = Vec::new();
         let mut external = Vec::new();
@@ -174,19 +174,23 @@ impl Request {
                     .unwrap_or(trait_path.path.clone());
                 // Use the simple path name for display (generics not needed in trait lists)
                 let display_name = trait_path.path.clone();
+
                 let impl_ = self.categorize_trait(full_path, display_name);
+
+                let the_trait = impl_block.get_path(trait_path.id);
+
                 match impl_.category {
-                    TraitCategory::CrateLocal => crate_local.push(impl_.name),
-                    TraitCategory::External => external.push(impl_.name),
-                    TraitCategory::Std => std_traits.push(impl_.name),
+                    TraitCategory::CrateLocal => crate_local.push((impl_.name, the_trait)),
+                    TraitCategory::External => external.push((impl_.name, the_trait)),
+                    TraitCategory::Std => std_traits.push((impl_.name, the_trait)),
                 }
             }
         }
 
         // Sort each category alphabetically for stable output
-        crate_local.sort();
-        external.sort();
-        std_traits.sort();
+        crate_local.sort_by(|(a, _), (b, _)| a.cmp(b));
+        external.sort_by(|(a, _), (b, _)| a.cmp(b));
+        std_traits.sort_by(|(a, _), (b, _)| a.cmp(b));
 
         let mut doc_nodes = vec![];
 
@@ -197,34 +201,19 @@ impl Request {
 
         if !primary_traits.is_empty() {
             doc_nodes.push(DocumentNode::Span(Span::plain("Trait Implementations:\n")));
-            doc_nodes.push(DocumentNode::Span(Span::plain(primary_traits.join(", "))));
+            for (name, item) in primary_traits {
+                doc_nodes.push(DocumentNode::Span(Span::plain(name).with_target(item)));
+                doc_nodes.push(DocumentNode::Span(Span::plain(" ")));
+            }
             doc_nodes.push(DocumentNode::Span(Span::plain("\n")));
         }
 
         // Add std traits separately with truncation
         if !std_traits.is_empty() {
-            let displayed_count = if self.format_context().verbosity().is_full() {
-                std_traits.len()
-            } else {
-                std_traits.len().min(10)
-            };
-
-            let displayed_traits = std_traits
-                .iter()
-                .take(displayed_count)
-                .cloned()
-                .collect::<Vec<_>>()
-                .join(", ");
-
             doc_nodes.push(DocumentNode::Span(Span::plain("std traits: ")));
-            doc_nodes.push(DocumentNode::Span(Span::plain(displayed_traits)));
-
-            if displayed_count < std_traits.len() {
-                let hidden_count = std_traits.len() - displayed_count;
-                doc_nodes.push(DocumentNode::Span(Span::plain(format!(
-                    " [+{} more]",
-                    hidden_count
-                ))));
+            for (name, item) in std_traits {
+                doc_nodes.push(DocumentNode::Span(Span::plain(name).with_target(item)));
+                doc_nodes.push(DocumentNode::Span(Span::plain(" ")));
             }
 
             doc_nodes.push(DocumentNode::Span(Span::plain("\n")));
@@ -233,6 +222,7 @@ impl Request {
         if !doc_nodes.is_empty() {
             doc_nodes.insert(0, DocumentNode::Span(Span::plain("\n")));
         }
+
         doc_nodes
     }
 
