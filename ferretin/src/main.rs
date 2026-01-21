@@ -49,7 +49,7 @@ struct Cli {
     interactive: bool,
 
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 struct IoFmtWriter<T>(T);
@@ -87,7 +87,10 @@ fn main() -> ExitCode {
 
     let request = Request::new(project, format_context);
 
-    let (mut document, is_error, initial_item) = cli.command.execute(&request);
+    let (mut document, is_error, initial_item) = cli
+        .command
+        .unwrap_or_else(Commands::list)
+        .execute(&request);
 
     if cli.interactive {
         // Interactive mode with scrolling and navigation
