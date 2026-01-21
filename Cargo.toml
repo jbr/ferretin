@@ -1,16 +1,11 @@
 [workspace]
 resolver = "2"
 members = ["ferretin-common", "rustdoc-mcp", "ferretin"]
-exclude = [
-    "rustdoc-mcp/tests/test-crate",
-    "rustdoc-mcp/tests/test-workspace",
-]
+exclude = ["rustdoc-mcp/tests/test-crate", "rustdoc-mcp/tests/test-workspace"]
 
 [workspace.package]
-version = "0.1.4"
 edition = "2024"
-readme = "README.md"
-repository = "https://github.com/jbr/rustdoc-mcp"
+repository = "https://github.com/jbr/ferretin"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]

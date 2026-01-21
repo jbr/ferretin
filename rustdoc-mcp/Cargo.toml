@@ -1,9 +1,9 @@
 [package]
 name = "rustdoc-mcp"
-version.workspace = true
+version = "0.1.4"
 edition.workspace = true
 description = "mcp server for rustdocs"
-readme.workspace = true
+readme = "./README.md"
 repository.workspace = true
 documentation = "https://docs.rs/rustdoc-mcp"
 license.workspace = true
