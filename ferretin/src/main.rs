@@ -87,14 +87,14 @@ fn main() -> ExitCode {
 
     let request = Request::new(project, format_context);
 
-    let (mut document, is_error, initial_item) = cli
+    let (mut document, is_error, initial_entry) = cli
         .command
         .unwrap_or_else(Commands::list)
         .execute(&request);
 
     if cli.interactive {
         // Interactive mode with scrolling and navigation
-        if let Err(e) = renderer::render_interactive(&mut document, &request, initial_item) {
+        if let Err(e) = renderer::render_interactive(&mut document, &request, initial_entry) {
             eprintln!("Interactive mode error: {}", e);
             return ExitCode::FAILURE;
         }

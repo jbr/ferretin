@@ -6,11 +6,11 @@ mod ui;
 mod utils;
 
 use events::handle_action;
-use ferretin_common::DocRef;
 use render::render_document;
-use rustdoc_types::Item;
-use state::{HistoryEntry, InputMode};
 use theme::InteractiveTheme;
+
+pub use state::HistoryEntry;
+use state::InputMode;
 use ui::{render_breadcrumb_bar, render_help_screen, render_status_bar};
 use utils::{set_cursor_shape, supports_cursor_shape};
 
@@ -36,7 +36,7 @@ use std::{
 pub fn render_interactive<'a>(
     initial_document: &mut Document<'a>,
     request: &'a Request,
-    initial_item: Option<DocRef<'a, Item>>,
+    initial_entry: Option<HistoryEntry<'a>>,
 ) -> io::Result<()> {
     let document = initial_document;
 
@@ -44,9 +44,9 @@ pub fn render_interactive<'a>(
     let mut history: Vec<HistoryEntry<'a>> = Vec::new();
     let mut history_index: usize = 0;
 
-    // Initialize history with current item if provided
-    if let Some(item) = initial_item {
-        history.push(HistoryEntry::Item(item));
+    // Initialize history with current entry if provided
+    if let Some(entry) = initial_entry {
+        history.push(entry);
     }
 
     // Set up terminal
@@ -70,7 +70,7 @@ pub fn render_interactive<'a>(
     let supports_cursor = supports_cursor_shape();
     let mut is_hovering = false;
     let mut mouse_enabled = true;
-    let mut debug_message = String::from("ferretin - q:quit ?:help ←/→:history g:go s:search");
+    let mut debug_message = String::from("ferretin - q:quit ?:help ←/→:history g:go s:search l:list");
 
     // Input mode state
     let mut input_mode = InputMode::Normal;
@@ -281,7 +281,7 @@ pub fn render_interactive<'a>(
                             input_mode = InputMode::Normal;
                             input_buffer.clear();
                             debug_message =
-                                "ferretin - q:quit ?:help ←/→:history g:go s:search".to_string();
+                                "ferretin - q:quit ?:help ←/→:history g:go s:search l:list".to_string();
                         } else {
                             break Ok(());
                         }
@@ -450,6 +450,22 @@ pub fn render_interactive<'a>(
                                 input_mode = InputMode::Search;
                                 input_buffer.clear();
                                 search_all_crates = false; // Default to current crate
+                            }
+
+                            // Show list of crates
+                            (KeyCode::Char('l'), _) => {
+                                let (list_doc, _is_error) = crate::commands::list::execute(request);
+                                *document = list_doc;
+                                scroll_offset = 0;
+
+                                let new_entry = HistoryEntry::List;
+                                if history.is_empty() || history.get(history_index) != Some(&new_entry) {
+                                    history.truncate(history_index + 1);
+                                    history.push(new_entry);
+                                    history_index = history.len() - 1;
+                                }
+
+                                debug_message = "List of crates".to_string();
                             }
 
                             // Toggle mouse mode for text selection
