@@ -1,9 +1,9 @@
 [package]
 name = "ferretin"
-version.workspace = true
+version = "0.1.0"
 edition.workspace = true
 description = "Human-friendly CLI for browsing Rust documentation"
-readme.workspace = true
+readme = "../README.md"
 repository.workspace = true
 license.workspace = true
 
