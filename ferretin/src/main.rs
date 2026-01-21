@@ -87,10 +87,8 @@ fn main() -> ExitCode {
 
     let request = Request::new(project, format_context);
 
-    let (mut document, is_error, initial_entry) = cli
-        .command
-        .unwrap_or_else(Commands::list)
-        .execute(&request);
+    let (mut document, is_error, initial_entry) =
+        cli.command.unwrap_or_else(Commands::list).execute(&request);
 
     if cli.interactive {
         // Interactive mode with scrolling and navigation

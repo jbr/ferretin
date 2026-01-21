@@ -509,7 +509,6 @@ pub(super) fn render_node<'a>(
 
             // Show bottom border with [...] if we didn't render all nodes
             if !rendered_all && !matches!(level, TruncationLevel::Full) {
-
                 let ellipsis_text = "╰─[...]";
                 let ellipsis_row = *row;
 
@@ -530,7 +529,15 @@ pub(super) fn render_node<'a>(
                 };
 
                 // Write the border with ellipsis
-                write_text(buf, ellipsis_row, left_margin, ellipsis_text, scroll, area, final_style);
+                write_text(
+                    buf,
+                    ellipsis_row,
+                    left_margin,
+                    ellipsis_text,
+                    scroll,
+                    area,
+                    final_style,
+                );
                 *col = left_margin + ellipsis_text.len() as u16;
 
                 // Track the action with the current path
@@ -769,7 +776,8 @@ pub(super) fn render_code_block(
     // Count actual display width (number of grapheme clusters, not bytes)
     let label_display_width = lang_label.chars().count();
     let min_border_for_label = label_display_width as u16 + 6; // label + some padding
-    let border_width = ((max_line_width + 4).max(min_border_for_label as usize)).min(available_width as usize) as u16;
+    let border_width = ((max_line_width + 4).max(min_border_for_label as usize))
+        .min(available_width as usize) as u16;
 
     let border_style = theme.code_block_border_style;
 
@@ -787,7 +795,15 @@ pub(super) fn render_code_block(
         }
 
         // Draw language label
-        write_text(buf, *row, label_start, &lang_label, scroll, area, border_style);
+        write_text(
+            buf,
+            *row,
+            label_start,
+            &lang_label,
+            scroll,
+            area,
+            border_style,
+        );
 
         // Draw dashes from end of label to corner
         // The label takes label_display_width columns, so next position is label_start + label_display_width
@@ -810,7 +826,10 @@ pub(super) fn render_code_block(
     *row += 1;
 
     // Render code content with side borders (no background color)
-    if let Some(syntax) = format_context.syntax_set().find_syntax_by_token(lang_display) {
+    if let Some(syntax) = format_context
+        .syntax_set()
+        .find_syntax_by_token(lang_display)
+    {
         let theme = format_context.theme();
         let mut highlighter = HighlightLines::new(syntax, theme);
 
@@ -863,7 +882,15 @@ pub(super) fn render_code_block(
                 write_text(buf, *row, left_margin, "│ ", scroll, area, border_style);
 
                 // Code content
-                write_text(buf, *row, left_margin + 2, line, scroll, area, Style::default());
+                write_text(
+                    buf,
+                    *row,
+                    left_margin + 2,
+                    line,
+                    scroll,
+                    area,
+                    Style::default(),
+                );
 
                 // Right border and padding
                 write_text(
@@ -931,11 +958,7 @@ pub(super) fn render_table<'a>(
     // Measure header widths
     if let Some(header_cells) = header {
         for (col_idx, cell) in header_cells.iter().enumerate() {
-            let width = cell
-                .spans
-                .iter()
-                .map(|s| s.text.len())
-                .sum::<usize>();
+            let width = cell.spans.iter().map(|s| s.text.len()).sum::<usize>();
             col_widths[col_idx] = col_widths[col_idx].max(width);
         }
     }
@@ -944,11 +967,7 @@ pub(super) fn render_table<'a>(
     for row_cells in rows {
         for (col_idx, cell) in row_cells.iter().enumerate() {
             if col_idx < num_cols {
-                let width = cell
-                    .spans
-                    .iter()
-                    .map(|s| s.text.len())
-                    .sum::<usize>();
+                let width = cell.spans.iter().map(|s| s.text.len()).sum::<usize>();
                 col_widths[col_idx] = col_widths[col_idx].max(width);
             }
         }

@@ -70,7 +70,8 @@ pub fn render_interactive<'a>(
     let supports_cursor = supports_cursor_shape();
     let mut is_hovering = false;
     let mut mouse_enabled = true;
-    let mut debug_message = String::from("ferretin - q:quit ?:help ←/→:history g:go s:search l:list");
+    let mut debug_message =
+        String::from("ferretin - q:quit ?:help ←/→:history g:go s:search l:list");
 
     // Input mode state
     let mut input_mode = InputMode::Normal;
@@ -281,7 +282,8 @@ pub fn render_interactive<'a>(
                             input_mode = InputMode::Normal;
                             input_buffer.clear();
                             debug_message =
-                                "ferretin - q:quit ?:help ←/→:history g:go s:search l:list".to_string();
+                                "ferretin - q:quit ?:help ←/→:history g:go s:search l:list"
+                                    .to_string();
                         } else {
                             break Ok(());
                         }
@@ -459,7 +461,9 @@ pub fn render_interactive<'a>(
                                 scroll_offset = 0;
 
                                 let new_entry = HistoryEntry::List;
-                                if history.is_empty() || history.get(history_index) != Some(&new_entry) {
+                                if history.is_empty()
+                                    || history.get(history_index) != Some(&new_entry)
+                                {
                                     history.truncate(history_index + 1);
                                     history.push(new_entry);
                                     history_index = history.len() - 1;
