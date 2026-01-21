@@ -31,4 +31,4 @@ unicode-width = "0.2.2"
 webbrowser = "1.0.6"
 
 [dev-dependencies]
-insta = "1.46.1"
+insta = { version = "1.46.1", features = ["filters"] }
