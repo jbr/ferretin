@@ -38,7 +38,7 @@ pub(super) fn render_breadcrumb_bar<'a>(
     let mut col = 0u16;
 
     // Start with icon
-    let icon = "📍 ";
+    let icon = " 🦀  ";
     for ch in icon.chars() {
         if col >= area.width {
             break;
@@ -77,9 +77,8 @@ pub(super) fn render_breadcrumb_bar<'a>(
         let end_col = start_col + name_len as u16;
 
         // Check if this item is being hovered
-        let is_hovered = hover_pos.is_some_and(|(hover_col, _)| {
-            hover_col >= start_col && hover_col < end_col
-        });
+        let is_hovered =
+            hover_pos.is_some_and(|(hover_col, _)| hover_col >= start_col && hover_col < end_col);
 
         let item_style = if is_hovered {
             // Hovered: reversed colors for visual feedback
