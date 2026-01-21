@@ -44,16 +44,15 @@ impl MarkdownRenderer {
                 Event::Start(tag) => match tag {
                     Tag::CodeBlock(kind) => {
                         in_code_block = true;
-                        code_block_lang = match kind {
-                            CodeBlockKind::Fenced(lang) => {
-                                if lang.is_empty() {
-                                    None
-                                } else {
-                                    Some(lang.to_string())
-                                }
-                            }
-                            CodeBlockKind::Indented => None,
-                        };
+                        code_block_lang = Some(match kind {
+                            CodeBlockKind::Fenced(lang) => match &*lang {
+                                "no_run" | "should_panic" | "ignore" | "compile_fail"
+                                | "edition2015" | "edition2018" | "edition2021" | "edition2024"
+                                | "" => "rust".to_string(),
+                                other => other.to_string(),
+                            },
+                            CodeBlockKind::Indented => "rust".to_string(),
+                        });
                         code_block_content.clear();
                     }
                     Tag::Emphasis => {

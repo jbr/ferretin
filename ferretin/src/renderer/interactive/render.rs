@@ -47,7 +47,7 @@ pub(super) fn render_document<'a>(
             &mut actions,
             &node_path,
             theme,
-            0, // no left margin at top level
+            2, // 2-space left margin for breathing room
         );
     }
 
@@ -253,6 +253,7 @@ pub(super) fn render_node<'a>(
                 row,
                 scroll,
                 theme,
+                left_margin,
             );
 
             *row += 1;
@@ -743,6 +744,7 @@ pub(super) fn render_code_block(
     row: &mut u16,
     scroll: u16,
     theme: &InteractiveTheme,
+    left_margin: u16,
 ) {
     let lang_display = match lang {
         Some("no_run") | Some("should_panic") | Some("ignore") | Some("compile_fail")
@@ -753,34 +755,35 @@ pub(super) fn render_code_block(
         None => "rust",
     };
 
-    // Calculate code block dimensions
+    // Calculate code block dimensions accounting for left margin
+    let available_width = area.width.saturating_sub(left_margin);
     let max_line_width = code
         .lines()
         .map(|line| line.len())
         .max()
         .unwrap_or(0)
-        .min((area.width.saturating_sub(4)) as usize); // Leave room for border and padding
+        .min((available_width.saturating_sub(4)) as usize); // Leave room for border and padding
 
     // Account for language label in border width: ╭───❬rust❭─╮
     let lang_label = format!("❬{}❭", lang_display);
     // Count actual display width (number of grapheme clusters, not bytes)
     let label_display_width = lang_label.chars().count();
     let min_border_for_label = label_display_width as u16 + 6; // label + some padding
-    let border_width = ((max_line_width + 4).max(min_border_for_label as usize)).min(area.width as usize) as u16;
+    let border_width = ((max_line_width + 4).max(min_border_for_label as usize)).min(available_width as usize) as u16;
 
     let border_style = theme.code_block_border_style;
 
     // Top border with language label: ╭─────❬rust❭─╮
     if *row >= scroll && *row < scroll + area.height {
-        write_text(buf, *row, 0, "╭", scroll, area, border_style);
+        write_text(buf, *row, left_margin, "╭", scroll, area, border_style);
 
         // Calculate position for language label (right side, with one dash before corner)
         // Label ends at border_width - 2 (leaving space for ─╮)
-        let label_start = border_width.saturating_sub(label_display_width as u16 + 2);
+        let label_start = left_margin + border_width.saturating_sub(label_display_width as u16 + 2);
 
         // Draw left dashes (up to label)
-        for i in 1..label_start {
-            write_text(buf, *row, i, "─", scroll, area, border_style);
+        for i in 1..label_start.saturating_sub(left_margin) {
+            write_text(buf, *row, left_margin + i, "─", scroll, area, border_style);
         }
 
         // Draw language label
@@ -789,7 +792,7 @@ pub(super) fn render_code_block(
         // Draw dashes from end of label to corner
         // The label takes label_display_width columns, so next position is label_start + label_display_width
         let label_end_col = label_start + label_display_width as u16;
-        for i in label_end_col..border_width.saturating_sub(1) {
+        for i in label_end_col..left_margin + border_width.saturating_sub(1) {
             write_text(buf, *row, i, "─", scroll, area, border_style);
         }
 
@@ -797,7 +800,7 @@ pub(super) fn render_code_block(
         write_text(
             buf,
             *row,
-            border_width.saturating_sub(1),
+            left_margin + border_width.saturating_sub(1),
             "╮",
             scroll,
             area,
@@ -814,9 +817,9 @@ pub(super) fn render_code_block(
         for line in LinesWithEndings::from(code) {
             if *row >= scroll && *row < scroll + area.height {
                 // Left border and padding
-                write_text(buf, *row, 0, "│ ", scroll, area, border_style);
+                write_text(buf, *row, left_margin, "│ ", scroll, area, border_style);
 
-                let mut col = 2u16;
+                let mut col = left_margin + 2;
 
                 if let Ok(ranges) = highlighter.highlight_line(line, format_context.syntax_set()) {
                     for (style, text) in ranges {
@@ -831,7 +834,7 @@ pub(super) fn render_code_block(
                     write_text(
                         buf,
                         *row,
-                        2,
+                        left_margin + 2,
                         line.trim_end_matches('\n'),
                         scroll,
                         area,
@@ -843,7 +846,7 @@ pub(super) fn render_code_block(
                 write_text(
                     buf,
                     *row,
-                    border_width.saturating_sub(2),
+                    left_margin + border_width.saturating_sub(2),
                     " │",
                     scroll,
                     area,
@@ -857,16 +860,16 @@ pub(super) fn render_code_block(
         for line in code.lines() {
             if *row >= scroll && *row < scroll + area.height {
                 // Left border and padding
-                write_text(buf, *row, 0, "│ ", scroll, area, border_style);
+                write_text(buf, *row, left_margin, "│ ", scroll, area, border_style);
 
                 // Code content
-                write_text(buf, *row, 2, line, scroll, area, Style::default());
+                write_text(buf, *row, left_margin + 2, line, scroll, area, Style::default());
 
                 // Right border and padding
                 write_text(
                     buf,
                     *row,
-                    border_width.saturating_sub(2),
+                    left_margin + border_width.saturating_sub(2),
                     " │",
                     scroll,
                     area,
@@ -879,14 +882,14 @@ pub(super) fn render_code_block(
 
     // Bottom border: ╰─────╯
     if *row >= scroll && *row < scroll + area.height {
-        write_text(buf, *row, 0, "╰", scroll, area, border_style);
+        write_text(buf, *row, left_margin, "╰", scroll, area, border_style);
         for i in 1..border_width.saturating_sub(1) {
-            write_text(buf, *row, i, "─", scroll, area, border_style);
+            write_text(buf, *row, left_margin + i, "─", scroll, area, border_style);
         }
         write_text(
             buf,
             *row,
-            border_width.saturating_sub(1),
+            left_margin + border_width.saturating_sub(1),
             "╯",
             scroll,
             area,
