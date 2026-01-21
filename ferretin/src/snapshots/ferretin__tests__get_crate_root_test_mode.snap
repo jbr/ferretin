@@ -53,7 +53,7 @@ This struct demonstrates <elided chars="220"/></truncated>
   <item><label><type-name>Vec</type-name></label>
 <truncated level="single-line">A contiguous growable array type, written as <inline-code>Vec<T></inline-code>, short for 'vector'.
 
- <elided chars="8636"/></truncated>
+ <elided chars="8635"/></truncated>
 </item>
 </list>
 </section><section><section-title>Enums</section-title><list>

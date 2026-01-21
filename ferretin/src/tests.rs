@@ -23,7 +23,15 @@ fn render_for_tests(command: Commands, output_mode: OutputMode) -> String {
     let (document, _, _) = command.execute(&request);
     let mut output = String::new();
     render(&document, &request.format_context(), &mut output).unwrap();
-    output
+
+    // Normalize the test crate path for consistent snapshots across environments
+    let test_crate_path = get_test_crate_path();
+    let test_crate_path_str = test_crate_path
+        .canonicalize()
+        .unwrap_or(test_crate_path)
+        .to_string_lossy()
+        .to_string();
+    output.replace(&test_crate_path_str, "/TEST_CRATE_ROOT")
 }
 
 #[test]

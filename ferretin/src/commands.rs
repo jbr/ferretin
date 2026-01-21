@@ -1,9 +1,10 @@
+use crate::renderer::HistoryEntry;
 use crate::request::Request;
 use crate::styled_string::Document;
 use std::fmt::Display;
 
 mod get;
-mod list;
+pub(crate) mod list;
 pub(crate) mod search;
 
 #[derive(clap::Subcommand, Debug)]
@@ -28,7 +29,7 @@ pub(crate) enum Commands {
         query: String,
 
         /// Crate to search
-        #[arg(long = "crate")]
+        #[arg(short, long = "crate")]
         crate_: Option<String>,
 
         /// Maximum number of results
@@ -110,28 +111,32 @@ impl Commands {
     pub fn execute<'a>(
         self,
         request: &'a Request,
-    ) -> (
-        Document<'a>,
-        bool,
-        Option<ferretin_common::DocRef<'a, rustdoc_types::Item>>,
-    ) {
+    ) -> (Document<'a>, bool, Option<HistoryEntry<'a>>) {
         match self {
             Commands::Get {
                 path,
                 source,
                 recursive,
-            } => get::execute(request, &path, source, recursive),
+            } => {
+                let (doc, is_error, item_ref) = get::execute(request, &path, source, recursive);
+                let history_entry = item_ref.map(HistoryEntry::Item);
+                (doc, is_error, history_entry)
+            }
             Commands::Search {
                 query,
                 limit,
                 crate_,
             } => {
                 let (doc, is_error) = search::execute(request, &query, limit, crate_.as_deref());
-                (doc, is_error, None)
+                let history_entry = Some(HistoryEntry::Search {
+                    query,
+                    crate_name: crate_,
+                });
+                (doc, is_error, history_entry)
             }
             Commands::List => {
                 let (doc, is_error) = list::execute(request);
-                (doc, is_error, None)
+                (doc, is_error, Some(HistoryEntry::List))
             }
         }
     }

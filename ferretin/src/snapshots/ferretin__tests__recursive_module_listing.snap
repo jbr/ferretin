@@ -63,7 +63,7 @@ This struct demonstrates <elided chars="220"/></truncated>
   <item><label><type-name>Vec</type-name></label>
 <truncated level="single-line">A contiguous growable array type, written as <inline-code>Vec<T></inline-code>, short for 'vector'.
 
- <elided chars="8636"/></truncated>
+ <elided chars="8635"/></truncated>
 </item>
   <item><label><type-name>link_resolution_tests::HashSet</type-name></label>
 <truncated level="single-line">A <link href="http://docs.rust-lang.org/nightly/std/index.html">hash set</link> implemented as a <inline-code>HashMap</inline-code> where the value is <inline-code>()</inline-code>.
@@ -399,7 +399,7 @@ In other words, remove <elided chars="582"/></truncated>
   <item><label><type-name>Vec::set_len</type-name></label>
 <truncated level="single-line">Forces the length of the vector to <inline-code>new_len</inline-code>.
 
-This is a low-level operation that <elided chars="2207"/></truncated>
+This is a low-level operation that <elided chars="1779"/></truncated>
 </item>
   <item><label><type-name>Vec::shrink_to</type-name></label>
 <truncated level="single-line">Shrinks the capacity of the vector with a lower bound.

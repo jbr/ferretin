@@ -9,6 +9,8 @@
 //!
 //! See: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 
+use std::str::FromStr;
+
 use crate::{DocRef, Navigator};
 use rustdoc_types::Item;
 
@@ -58,9 +60,10 @@ pub enum Disambiguator {
     Variant,
 }
 
-impl Disambiguator {
+impl FromStr for Disambiguator {
+    type Err = ();
     /// Parse a disambiguator from a string prefix
-    pub fn from_str(s: &str) -> Option<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "type" => Some(Self::Type),
             "fn" | "function" => Some(Self::Function),
@@ -78,6 +81,7 @@ impl Disambiguator {
             "variant" => Some(Self::Variant),
             _ => None,
         }
+        .ok_or(())
     }
 }
 
@@ -110,7 +114,7 @@ pub fn resolve_link<'a>(
 
     // Parse disambiguator if present
     let (disambiguator, path) = if let Some((prefix, rest)) = path.split_once('@') {
-        (Disambiguator::from_str(prefix), rest)
+        (Disambiguator::from_str(prefix).ok(), rest)
     } else {
         (None, path)
     };
@@ -182,17 +186,23 @@ mod unit_tests {
 
     #[test]
     fn test_disambiguator_parsing() {
-        assert_eq!(Disambiguator::from_str("type"), Some(Disambiguator::Type));
-        assert_eq!(Disambiguator::from_str("fn"), Some(Disambiguator::Function));
         assert_eq!(
-            Disambiguator::from_str("function"),
+            Disambiguator::from_str("type").ok(),
+            Some(Disambiguator::Type)
+        );
+        assert_eq!(
+            Disambiguator::from_str("fn").ok(),
             Some(Disambiguator::Function)
         );
         assert_eq!(
-            Disambiguator::from_str("struct"),
+            Disambiguator::from_str("function").ok(),
+            Some(Disambiguator::Function)
+        );
+        assert_eq!(
+            Disambiguator::from_str("struct").ok(),
             Some(Disambiguator::Struct)
         );
-        assert_eq!(Disambiguator::from_str("invalid"), None);
+        assert_eq!(Disambiguator::from_str("invalid").ok(), None);
     }
 }
 

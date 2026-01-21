@@ -63,7 +63,7 @@ It uses <link href="http://docs.rust-lang.org/nightly/alloc/vec/struct.Vec.html"
 </section>
 std traits: Any Borrow BorrowMut Clone CloneToUninit Debug Freeze From Into RefUnwindSafe Send Sync TestTrait ToOwned TryFrom TryInto Unpin UnwindSafe 
 
-Source: /Users/jbr/code/rustdoc-mcp/tests/test-crate/src/lib.rs
+Source: /TEST_CRATE_ROOT/src/lib.rs
 <code-block lang="rust">
 #[derive(Debug, Clone)]
 pub struct TestStruct {

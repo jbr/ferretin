@@ -21,12 +21,12 @@ pub fn convert_crate(crate_56: v56::Crate) -> Result<v57::Crate> {
         serde_json::to_value(&crate_56).context("Failed to serialize v56 crate to JSON")?;
 
     // Patch: Add `path` field to all ExternalCrate entries (defaults to empty PathBuf)
-    if let Some(external_crates) = json_value.get_mut("external_crates") {
-        if let Some(map) = external_crates.as_object_mut() {
-            for (_id, ext_crate) in map.iter_mut() {
-                if let Some(obj) = ext_crate.as_object_mut() {
-                    obj.insert("path".to_string(), serde_json::json!(""));
-                }
+    if let Some(external_crates) = json_value.get_mut("external_crates")
+        && let Some(map) = external_crates.as_object_mut()
+    {
+        for (_id, ext_crate) in map.iter_mut() {
+            if let Some(obj) = ext_crate.as_object_mut() {
+                obj.insert("path".to_string(), serde_json::json!(""));
             }
         }
     }

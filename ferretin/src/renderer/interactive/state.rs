@@ -13,7 +13,7 @@ pub(super) enum InputMode {
 
 /// Entry in navigation history
 #[derive(Debug, Clone, PartialEq)]
-pub(super) enum HistoryEntry<'a> {
+pub enum HistoryEntry<'a> {
     /// Regular item navigation
     Item(ferretin_common::DocRef<'a, rustdoc_types::Item>),
     /// Search result page
@@ -21,6 +21,8 @@ pub(super) enum HistoryEntry<'a> {
         query: String,
         crate_name: Option<String>,
     },
+    /// List crates page
+    List,
 }
 
 impl<'a> HistoryEntry<'a> {
@@ -35,6 +37,7 @@ impl<'a> HistoryEntry<'a> {
                     format!("\"{}\"", query)
                 }
             }
+            HistoryEntry::List => "List".to_string(),
         }
     }
 
@@ -43,6 +46,7 @@ impl<'a> HistoryEntry<'a> {
         match self {
             HistoryEntry::Item(item) => Some(item.crate_docs().name()),
             HistoryEntry::Search { crate_name, .. } => crate_name.as_deref(),
+            HistoryEntry::List => None,
         }
     }
 
@@ -61,6 +65,10 @@ impl<'a> HistoryEntry<'a> {
                     crate_name.as_deref(),
                 );
                 search_doc
+            }
+            HistoryEntry::List => {
+                let (list_doc, _is_error) = crate::commands::list::execute(request);
+                list_doc
             }
         }
     }
