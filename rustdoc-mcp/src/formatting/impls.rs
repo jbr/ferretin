@@ -1,7 +1,7 @@
 use rustdoc_types::ItemKind;
+use semver::VersionReq;
 
 use super::*;
-use ferretin_common::project::RUST_CRATES;
 use std::cmp::Ordering;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -203,21 +203,21 @@ impl Request {
     fn categorize_trait(&self, full_path: String, rendered_path: String) -> TraitImpl {
         // Check by explicit crate prefix (like std::fmt::Display)
         let crate_prefix = full_path.split("::").next().unwrap_or("");
-        // Check if it's from std crates by prefix
-        if !crate_prefix.is_empty()
-            && let Some(normalized) = self.project.normalize_crate_name(crate_prefix)
-        {
-            if RUST_CRATES.contains(&normalized) {
-                return TraitImpl {
-                    category: TraitCategory::Std,
-                    name: rendered_path.to_string(),
-                };
-            }
 
-            // Check if it's from current workspace
-            if self.project.is_workspace_package(normalized) {
+        // Use Navigator's lookup to determine provenance
+        if !crate_prefix.is_empty() {
+            if let Some(lookup_result) = self.lookup_crate(crate_prefix, &VersionReq::STAR) {
+                let provenance = lookup_result.provenance();
+                let category = if provenance.is_workspace() {
+                    TraitCategory::CrateLocal
+                } else if provenance.is_std() {
+                    TraitCategory::Std
+                } else {
+                    TraitCategory::External
+                };
+
                 return TraitImpl {
-                    category: TraitCategory::CrateLocal,
+                    category,
                     name: rendered_path.to_string(),
                 };
             }

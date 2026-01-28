@@ -1,9 +1,11 @@
 ---
-source: src/workspace_tests.rs
+source: rustdoc-mcp/src/workspace_tests.rs
 expression: result
 ---
-`crate` not found. Did you mean one of these?
+Item: crate_b
+Kind: Module
+Visibility: Public
+Defined at: crate_b
 
-• `crate-a` (Crate)
-• `crate-b` (Crate)
-• `core` (Crate)
+Structs:
+CrateBProcessor

@@ -1,5 +1,5 @@
 ---
-source: src/tests.rs
+source: rustdoc-mcp/src/tests.rs
 expression: result
 ---
 `crate::TestStruct::test_metod` not found. Did you mean one of these?
@@ -7,5 +7,5 @@ expression: result
 • `crate::TestStruct::get_field` (Function)
 • `crate::TestStruct::new` (Function)
 • `crate::TestStruct::increment_count` (Function)
-• `crate::TestTrait` (Trait)
+• `crate::TestStruct::ASSOCIATED_CONST` (AssocConst)
 • `crate::TestEnum` (Enum)

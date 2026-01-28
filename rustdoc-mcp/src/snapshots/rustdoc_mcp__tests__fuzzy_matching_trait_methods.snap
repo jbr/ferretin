@@ -1,5 +1,5 @@
 ---
-source: src/tests.rs
+source: rustdoc-mcp/src/tests.rs
 expression: result
 ---
 `crate::TestStruct::cute` not found. Did you mean one of these?
@@ -8,4 +8,4 @@ expression: result
 • `crate::TestStruct::increment_count` (Function)
 • `crate::TestStruct::get_field` (Function)
 • `crate::TestStruct::ASSOCIATED_CONST` (AssocConst)
-• `crate::TestTrait` (Trait)
+• `crate::TupleStruct` (Struct)
