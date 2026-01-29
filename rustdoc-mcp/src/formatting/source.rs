@@ -5,8 +5,10 @@ pub(crate) fn format_source_code(request: &Request, span: &Span) -> String {
     // Resolve the file path - if it's relative, make it relative to the project root
     let file_path = if span.filename.is_absolute() {
         span.filename.clone()
+    } else if let Some(project_root) = request.project_root() {
+        project_root.join(&span.filename)
     } else {
-        request.project.project_root().join(&span.filename)
+        return String::new();
     };
 
     let Ok(file_content) = fs::read_to_string(&file_path) else {

@@ -1,4 +1,4 @@
-use ferretin_common::iterators::IdIter;
+use ferritin_common::iterators::IdIter;
 
 use super::*;
 

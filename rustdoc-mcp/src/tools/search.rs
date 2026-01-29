@@ -2,9 +2,9 @@ use crate::format_context::FormatContext;
 use crate::indent::Indent;
 use crate::request::Request;
 use crate::state::RustdocTools;
-use ferretin_common::search::indexer::SearchIndex;
 use crate::traits::WriteFmt;
 use anyhow::Result;
+use ferritin_common::search::indexer::SearchIndex;
 use mcplease::traits::{Tool, WithExamples};
 use mcplease::types::Example;
 use serde::{Deserialize, Serialize};
@@ -76,7 +76,8 @@ impl Tool<RustdocTools> for Search {
 
         // Perform search
         let limit = self.limit.unwrap_or(10);
-        let results = index.search(&self.query);
+        let mut results = index.search(&self.query).collect::<Vec<_>>();
+        results.sort_by(|(_, a), (_, b)| b.total_cmp(a));
 
         // Format results
         let mut output = String::new();

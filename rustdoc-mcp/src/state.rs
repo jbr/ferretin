@@ -1,9 +1,7 @@
 use anyhow::{Result, anyhow};
-use ferretin_common::project::RustdocProject;
 use fieldwork::Fieldwork;
 use mcplease::session::SessionStore;
 use serde::{Deserialize, Serialize};
-use std::rc::Rc;
 use std::{fmt::Debug, fs, path::PathBuf};
 
 /// Shared context data that can be used across multiple MCP servers
@@ -22,9 +20,6 @@ pub(crate) struct RustdocTools {
 
     #[field(set, with)]
     default_session_id: &'static str,
-
-    /// Cached rustdoc project (lazily loaded)
-    cached_project: Option<Rc<RustdocProject>>,
 }
 
 impl RustdocTools {
@@ -35,7 +30,6 @@ impl RustdocTools {
         Ok(Self {
             shared_context_store,
             default_session_id: "default",
-            cached_project: None,
         })
     }
 
@@ -54,35 +48,9 @@ impl RustdocTools {
     ) -> Result<()> {
         let session_id = session_id.unwrap_or_else(|| self.default_session_id());
 
-        // Clear cached project when working directory changes
-        self.cached_project = None;
-
         self.shared_context_store.update(session_id, |data| {
             data.context_path = Some(path);
         })
-    }
-
-    /// Get or load the rustdoc project for the current working directory
-    pub(crate) fn project_context(
-        &mut self,
-        session_id: Option<&str>,
-    ) -> Result<Rc<RustdocProject>> {
-        let manifest_path = self.resolve_path("Cargo.toml", session_id)?;
-        log::trace!("using manifest path {}", manifest_path.display());
-
-        // If we already have a cached project, return it
-        if let Some(project) = self.cached_project.clone()
-            && project.manifest_path() == &*manifest_path
-        {
-            return Ok(project);
-        };
-
-        // Load the project
-        let project = Rc::new(RustdocProject::load(manifest_path)?);
-
-        self.cached_project = Some(Rc::clone(&project));
-
-        Ok(project)
     }
 
     pub(crate) fn resolve_path(
@@ -96,9 +64,12 @@ impl RustdocTools {
             return fs::canonicalize(path).map_err(Into::into);
         }
 
-        let session_id = session_id.unwrap_or_else(|| self.default_session_id());
-        match self.get_context(Some(session_id))? {
-            Some(context) => fs::canonicalize(context.join(path_str)).map_err(Into::into),
+        self.working_directory(session_id).map(|x| x.join(path_str))
+    }
+
+    pub(crate) fn working_directory(&mut self, session_id: Option<&str>) -> Result<PathBuf> {
+        match self.get_context(session_id)? {
+            Some(context) => fs::canonicalize(context).map_err(Into::into),
             None => Err(anyhow!(
                 "Use set_working_directory first or provide an absolute path.",
             )),

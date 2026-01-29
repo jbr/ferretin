@@ -1,13 +1,13 @@
 # 🩸 Ferretin
 
 [![ci][ci-badge]][ci]
-[![codecov](https://codecov.io/gh/jbr/ferretin/graph/badge.svg?token=FDpsPBK9zl)](https://codecov.io/gh/jbr/ferretin)
+[![codecov](https://codecov.io/gh/jbr/ferritin/graph/badge.svg?token=FDpsPBK9zl)](https://codecov.io/gh/jbr/ferritin)
 [![crates.io version badge][version-badge]][crate]
 
-[ci]: https://github.com/jbr/ferretin/actions?query=workflow%3ACI
-[ci-badge]: https://github.com/jbr/ferretin/workflows/CI/badge.svg
-[version-badge]: https://img.shields.io/crates/v/ferretin.svg?style=flat-square
-[crate]: https://crates.io/crates/ferretin
+[ci]: https://github.com/jbr/ferritin/actions?query=workflow%3ACI
+[ci-badge]: https://github.com/jbr/ferritin/workflows/CI/badge.svg
+[version-badge]: https://img.shields.io/crates/v/ferritin.svg?style=flat-square
+[crate]: https://crates.io/crates/ferritin
 
 A terminal-based Rust documentation viewer
 
@@ -28,7 +28,7 @@ Ferretin reads rustdoc JSON output to display Rust documentation directly in you
 ## Installation
 
 ```bash
-cargo install ferretin
+cargo install ferritin
 ```
 
 ### Optional: Standard library documentation
@@ -47,7 +47,7 @@ Local crate documentation requires a nightly toolchain:
 rustup toolchain install nightly
 ```
 
-Note: There is a relationship between ferretin's version and the nightly toolchain version. Ferretin currently supports rustdoc JSON format versions 55, 56, and 57. If your nightly generates a newer format, ferretin won't be able to build local documentation until support is added.
+Note: There is a relationship between ferritin's version and the nightly toolchain version. Ferretin currently supports rustdoc JSON format versions 55, 56, and 57. If your nightly generates a newer format, ferritin won't be able to build local documentation until support is added.
 
 ## Usage
 
@@ -56,7 +56,7 @@ Note: There is a relationship between ferretin's version and the nightly toolcha
 Launch the interactive browser:
 
 ```bash
-ferretin -i
+ferritin -i
 ```
 
 Once running, use `h` or `?` to see available keybindings. Basic navigation:
@@ -71,21 +71,21 @@ Once running, use `h` or `?` to see available keybindings. Basic navigation:
 View documentation for a specific item:
 
 ```bash
-ferretin get std::vec::Vec
-ferretin get serde::Serialize
+ferritin get std::vec::Vec
+ferritin get serde::Serialize
 ```
 
 Search for items:
 
 ```bash
-ferretin search "hash map"
-ferretin search --crate tokio "spawn"
+ferritin search "hash map"
+ferritin search --crate tokio "spawn"
 ```
 
 List available crates in your workspace:
 
 ```bash
-ferretin list
+ferritin list
 ```
 
 ## Caching and Storage
@@ -102,7 +102,7 @@ The cache uses cargo's home directory (typically `~/.cargo` on Unix systems).
 
 Ferretin is at version 0.1 and actively used by the author as a primary documentation interface. It's ready for general use, though the output format should be considered unstable and may change between versions.
 
-**If you're scripting against ferretin's output**, be aware that the text format may change. Pin to a specific version or be prepared to update your scripts.
+**If you're scripting against ferritin's output**, be aware that the text format may change. Pin to a specific version or be prepared to update your scripts.
 
 ## Platform Support
 
