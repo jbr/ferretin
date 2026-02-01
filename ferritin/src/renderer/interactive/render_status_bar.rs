@@ -1,0 +1,99 @@
+use ratatui::{buffer::Buffer, layout::Rect};
+
+use super::state::{InputMode, InteractiveState, UiMode};
+
+impl<'a> InteractiveState<'a> {
+    /// Render status bar at the bottom of the screen
+    pub(super) fn render_status_bar(&mut self, buf: &mut Buffer, area: Rect) {
+        // Get current crate name for search scope display
+        let current_crate = self
+            .document
+            .history
+            .current()
+            .and_then(|entry| entry.crate_name());
+        let style = self.theme.status_style;
+        let hint_style = self.theme.status_hint_style;
+
+        // Clear the status line
+        for x in 0..area.width {
+            buf.cell_mut((x, area.y)).unwrap().reset();
+            buf.cell_mut((x, area.y)).unwrap().set_style(style);
+        }
+
+        // Spinner characters that cycle
+        const SPINNER: &[char] = &['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+        let spinner_char = if self.loading.pending_request {
+            SPINNER[(self.loading.frame_count as usize / 2) % SPINNER.len()]
+        } else {
+            ' '
+        };
+
+        // Determine what to display based on UI mode
+        let (mut display_text, hint_text) = match &self.ui_mode {
+            UiMode::Normal | UiMode::Help => (self.ui.debug_message.clone(), None),
+            UiMode::Input(InputMode::GoTo { buffer }) => (format!("Go to: {}", buffer), None),
+            UiMode::Input(InputMode::Search { buffer, all_crates }) => {
+                let scope = if *all_crates {
+                    "all crates".to_string()
+                } else {
+                    current_crate
+                        .map(|c| c.to_string())
+                        .unwrap_or_else(|| "current crate".to_string())
+                };
+                (
+                    format!("Search in {}: {}", scope, buffer),
+                    Some("[tab] toggle scope"),
+                )
+            }
+        };
+
+        // Prepend spinner if loading
+        if self.loading.pending_request {
+            display_text = format!("{} {}", spinner_char, display_text);
+        }
+
+        // Calculate space for hint text
+        let hint_len = hint_text.as_ref().map(|h| h.len()).unwrap_or(0);
+        let available_width = area.width as usize;
+        let text_max_width = if hint_len > 0 {
+            available_width.saturating_sub(hint_len + 2) // +2 for spacing
+        } else {
+            available_width
+        };
+
+        // Render main text (truncate if needed)
+        let truncated = if display_text.len() > text_max_width {
+            &display_text[..text_max_width]
+        } else {
+            &display_text
+        };
+
+        let mut col = 0u16;
+        for ch in truncated.chars() {
+            if col >= area.width {
+                break;
+            }
+            buf.cell_mut((col, area.y))
+                .unwrap()
+                .set_char(ch)
+                .set_style(style);
+            col += 1;
+        }
+
+        // Render right-justified hint text if present
+        if let Some(hint) = hint_text {
+            let hint_start = (area.width as usize).saturating_sub(hint.len()) as u16;
+            let mut hint_col = hint_start;
+            for ch in hint.chars() {
+                if hint_col >= area.width {
+                    break;
+                }
+                buf.cell_mut((hint_col, area.y))
+                    .unwrap()
+                    .set_char(ch)
+                    .set_style(hint_style);
+                hint_col += 1;
+            }
+        }
+    }
+}
