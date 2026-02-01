@@ -3,25 +3,30 @@ mod events;
 mod history;
 mod keyboard;
 mod mouse;
-mod render;
+mod render_code_block;
+mod render_document;
 mod render_frame;
+mod render_help_screen;
+mod render_node;
+mod render_span;
+mod render_status_bar;
+mod render_table;
 mod request_thread;
 mod response;
+mod span_style;
 mod state;
 mod theme;
-mod ui;
 mod ui_config;
 mod utils;
+mod write_text;
 
 #[cfg(test)]
 mod tests;
 
 use events::handle_action;
-use render::render_document;
 use theme::InteractiveTheme;
 
 pub use history::HistoryEntry;
-use ui::{render_help_screen, render_status_bar};
 use utils::set_cursor_shape;
 
 use crate::{
