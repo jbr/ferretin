@@ -1,5 +1,5 @@
 use crate::styled_string::SpanStyle;
-use syntect::highlighting::{Color, Highlighter, Theme, ThemeSet};
+use syntect::highlighting::{Color, Highlighter, Theme};
 use syntect::parsing::{Scope, ScopeStack};
 
 /// A color scheme mapping semantic span styles to colors
@@ -64,21 +64,6 @@ impl ColorScheme {
         }
     }
 
-    /// Load a named theme from the default theme set
-    pub fn from_theme_name(name: &str) -> Result<Self, String> {
-        let theme_set = ThemeSet::load_defaults();
-        theme_set
-            .themes
-            .get(name)
-            .map(Self::from_syntect_theme)
-            .ok_or_else(|| format!("Theme '{}' not found", name))
-    }
-
-    /// Get available theme names
-    pub fn available_themes() -> Vec<String> {
-        let theme_set = ThemeSet::load_defaults();
-        theme_set.themes.keys().cloned().collect()
-    }
 
     /// Get the color for a specific span style
     pub fn color_for(&self, style: SpanStyle) -> Color {
@@ -118,25 +103,22 @@ impl ColorScheme {
 
 impl Default for ColorScheme {
     fn default() -> Self {
-        // Default to base16-ocean.dark theme (same as markdown renderer)
-        Self::from_theme_name("base16-ocean.dark").unwrap_or_else(|_| {
-            // Fallback if theme loading fails
-            Self {
-                colors: std::collections::HashMap::new(),
-                default_foreground: Color {
-                    r: 200,
-                    g: 200,
-                    b: 200,
-                    a: 255,
-                },
-                default_background: Color {
-                    r: 0,
-                    g: 0,
-                    b: 0,
-                    a: 255,
-                },
-            }
-        })
+        // Simple default color scheme
+        Self {
+            colors: std::collections::HashMap::new(),
+            default_foreground: Color {
+                r: 200,
+                g: 200,
+                b: 200,
+                a: 255,
+            },
+            default_background: Color {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 255,
+            },
+        }
     }
 }
 
@@ -144,18 +126,6 @@ impl Default for ColorScheme {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_load_theme() {
-        let scheme = ColorScheme::from_theme_name("base16-ocean.dark");
-        assert!(scheme.is_ok());
-    }
-
-    #[test]
-    fn test_available_themes() {
-        let themes = ColorScheme::available_themes();
-        assert!(!themes.is_empty());
-        assert!(themes.contains(&"base16-ocean.dark".to_string()));
-    }
 
     #[test]
     fn test_color_for_style() {
