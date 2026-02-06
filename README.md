@@ -1,4 +1,4 @@
-# 🩸 Ferretin
+# 🩸 Ferritin
 
 [![ci][ci-badge]][ci]
 [![codecov](https://codecov.io/gh/jbr/ferritin/graph/badge.svg?token=FDpsPBK9zl)](https://codecov.io/gh/jbr/ferritin)
@@ -11,7 +11,7 @@
 
 A terminal-based Rust documentation viewer
 
-Ferretin reads rustdoc JSON output to display Rust documentation directly in your terminal. It supports local workspace crates, standard library documentation, and crates from crates.io, with search functionality and modern terminal features including mouse support, syntax highlighting, and clickable links.
+Ferritin reads rustdoc JSON output to display Rust documentation directly in your terminal. It supports local workspace crates, standard library documentation, and crates from crates.io, with search functionality and modern terminal features including mouse support, syntax highlighting, and clickable links.
 
 ## Features
 
@@ -47,7 +47,7 @@ Local crate documentation requires a nightly toolchain:
 rustup toolchain install nightly
 ```
 
-Note: There is a relationship between ferritin's version and the nightly toolchain version. Ferretin currently supports rustdoc JSON format versions 55, 56, and 57. If your nightly generates a newer format, ferritin won't be able to build local documentation until support is added.
+Note: There is a relationship between ferritin's version and the nightly toolchain version. Ferritin currently supports rustdoc JSON format versions 55, 56, and 57. If your nightly generates a newer format, ferritin won't be able to build local documentation until support is added.
 
 ## Usage
 
@@ -90,7 +90,7 @@ ferritin list
 
 ## Caching and Storage
 
-Ferretin caches documentation JSON files to avoid repeated downloads and builds:
+Ferritin caches documentation JSON files to avoid repeated downloads and builds:
 
 - **Crates.io documentation**: Cached in `$CARGO_HOME/rustdoc-json/{format-version}/{crate_name}/{crate_version}.json`
 - **Search indices**: Binary `.index` files are generated lazily on first search and stored alongside JSON files
@@ -100,17 +100,17 @@ The cache uses cargo's home directory (typically `~/.cargo` on Unix systems).
 
 ## Current Status
 
-Ferretin is at version 0.1 and actively used by the author as a primary documentation interface. It's ready for general use, though the output format should be considered unstable and may change between versions.
+Ferritin is at version 0.1 and actively used by the author as a primary documentation interface. It's ready for general use, though the output format should be considered unstable and may change between versions.
 
 **If you're scripting against ferritin's output**, be aware that the text format may change. Pin to a specific version or be prepared to update your scripts.
 
 ## Platform Support
 
-Ferretin is developed and tested on Unix-like systems. Windows compatibility is untested. If you encounter issues on Windows or other platforms, please open an issue or pull request.
+Ferritin is developed and tested on Unix-like systems. Windows compatibility is untested. If you encounter issues on Windows or other platforms, please open an issue or pull request.
 
 ## Related Projects
 
-Ferretin was originally developed to support the [rustdoc-mcp MCP server](./rustdoc-mcp/README.md), which provides Rust documentation access for Claude Code and other MCP clients.
+Ferritin was originally developed to support the [rustdoc-mcp MCP server](./rustdoc-mcp/README.md), which provides Rust documentation access for Claude Code and other MCP clients.
 
 
 ## License
