@@ -6,6 +6,12 @@ description = "Human-friendly CLI for browsing Rust documentation"
 readme = "../README.md"
 repository.workspace = true
 license.workspace = true
+include = [
+    "src/**/*",
+    "build.rs",
+    "assets/**/*.tmTheme",
+    "CHANGELOG.md",
+]
 
 [[bin]]
 name = "ferritin"
