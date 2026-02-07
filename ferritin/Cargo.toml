@@ -22,6 +22,7 @@ ferritin-common = { path = "../ferritin-common", version = "0.2.0" }
 
 anyhow.workspace = true
 clap = { version = "4.5.56", features = ["derive", "cargo", "env"] }
+crossbeam-channel = "0.5"
 crossterm = "0.29"
 fieldwork = "0.4.6"
 log = "0.4.29"

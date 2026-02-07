@@ -17,24 +17,29 @@ impl<'a> InteractiveState<'a> {
     ) -> bool {
         // Always allow Escape to exit help, cancel input mode, or quit
         if key.code == KeyCode::Esc {
-            match self.ui_mode {
+            match std::mem::replace(&mut self.ui_mode, UiMode::Normal) {
                 UiMode::Help => {
-                    self.ui_mode = UiMode::Normal;
+                    // Already set to Normal by replace
+                }
+                UiMode::DevLog {
+                    previous_document,
+                    previous_scroll,
+                } => {
+                    // Restore previous state
+                    self.document.document = previous_document;
+                    self.viewport.scroll_offset = previous_scroll;
                 }
                 UiMode::Input(_) => {
-                    self.ui_mode = UiMode::Normal;
+                    // Already set to Normal by replace
                     self.ui.debug_message =
                         "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code"
                             .to_string();
                 }
                 UiMode::ThemePicker {
-                    ref saved_theme_name,
-                    ..
+                    saved_theme_name, ..
                 } => {
-                    // Revert to saved theme on cancel
-                    let theme_name = saved_theme_name.clone();
-                    self.ui_mode = UiMode::Normal;
-                    let _ = self.apply_theme(&theme_name);
+                    // Already set to Normal by replace, just revert theme
+                    let _ = self.apply_theme(&saved_theme_name);
                     self.ui.debug_message =
                         "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code"
                             .to_string();
@@ -179,6 +184,46 @@ impl<'a> InteractiveState<'a> {
                     let page_size = size.height / 2;
                     self.viewport.scroll_offset =
                         self.viewport.scroll_offset.saturating_sub(page_size);
+                }
+
+                // Dump logs to disk (undocumented debug feature)
+                (KeyCode::Char('l'), KeyModifiers::ALT) => match self.dump_logs_to_disk() {
+                    Ok(filename) => {
+                        self.ui.debug_message = format!("Logs saved to {}", filename);
+                    }
+                    Err(e) => {
+                        self.ui.debug_message = format!("Failed to save logs: {}", e);
+                    }
+                },
+
+                // Toggle dev log (undocumented debug feature)
+                (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                    match std::mem::replace(&mut self.ui_mode, UiMode::Normal) {
+                        UiMode::DevLog {
+                            previous_document,
+                            previous_scroll,
+                        } => {
+                            // Exiting dev log - restore previous state
+                            self.document.document = previous_document;
+                            self.viewport.scroll_offset = previous_scroll;
+                        }
+                        UiMode::Normal => {
+                            // Entering dev log - swap in dev log document
+                            let dev_log_doc = self.create_dev_log_document();
+                            let previous_document =
+                                std::mem::replace(&mut self.document.document, dev_log_doc);
+                            let previous_scroll = self.viewport.scroll_offset;
+                            self.viewport.scroll_offset = 0;
+                            self.ui_mode = UiMode::DevLog {
+                                previous_document,
+                                previous_scroll,
+                            };
+                        }
+                        other => {
+                            // Was in a different mode, restore it
+                            self.ui_mode = other;
+                        }
+                    }
                 }
 
                 // Jump to top

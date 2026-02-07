@@ -37,6 +37,8 @@ impl<'a> InteractiveState<'a> {
             let help_area = frame.area();
             self.render_help_screen(frame.buffer_mut(), help_area);
         } else {
+            // Normal mode or DevLog mode - both render self.document.document
+            // (DevLog has already swapped in its document)
             // Clear main area with theme background
             for y in 0..main_area.height {
                 for x in 0..main_area.width {

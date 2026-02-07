@@ -70,6 +70,7 @@
 //! The layout state is saved and restored when rendering children at different indentation levels.
 
 mod channels;
+mod dev_log;
 mod events;
 mod history;
 mod keyboard;
@@ -105,10 +106,12 @@ use utils::set_cursor_shape;
 
 use crate::{
     commands::Commands,
+    logging::LogReader,
     render_context::RenderContext,
     renderer::interactive::state::{InputMode, InteractiveState, UiMode},
     request::Request,
 };
+use crossbeam_channel::select;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event},
     execute,
@@ -117,9 +120,7 @@ use crossterm::{
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::{
     io::{self, stdout},
-    sync::mpsc::{Receiver, Sender, channel},
     thread,
-    time::Duration,
 };
 
 use channels::{RequestResponse, UiCommand};
@@ -130,9 +131,12 @@ pub fn render_interactive(
     request: &Request,
     render_context: RenderContext,
     initial_command: Option<Commands>,
+    log_reader: LogReader,
 ) -> io::Result<()> {
     // Use scoped threads so request can be borrowed by both threads
-    thread::scope(|scope| render_interactive_impl(scope, request, render_context, initial_command))
+    thread::scope(|scope| {
+        render_interactive_impl(scope, request, render_context, initial_command, log_reader)
+    })
 }
 
 fn render_interactive_impl<'scope, 'env: 'scope>(
@@ -140,18 +144,25 @@ fn render_interactive_impl<'scope, 'env: 'scope>(
     request: &'env Request,
     render_context: RenderContext,
     initial_command: Option<Commands>,
+    log_reader: LogReader,
 ) -> io::Result<()> {
     // Build interactive theme from render context
     let interactive_theme = InteractiveTheme::from_render_context(&render_context);
 
     // Create channels for communication between UI and request threads
-    let (cmd_tx, cmd_rx) = channel::<UiCommand<'env>>();
-    let (resp_tx, resp_rx) = channel::<RequestResponse<'env>>();
+    let (cmd_tx, cmd_rx) = crossbeam_channel::unbounded::<UiCommand<'env>>();
+    let (resp_tx, resp_rx) = crossbeam_channel::unbounded::<RequestResponse<'env>>();
 
     // Spawn UI thread - it only renders and handles input
     // UI thread starts without a document - will receive initial document via channel
     let ui_handle = scope.spawn(|| -> io::Result<()> {
-        ui_thread_loop(render_context, interactive_theme, cmd_tx, resp_rx)
+        ui_thread_loop(
+            render_context,
+            interactive_theme,
+            cmd_tx,
+            resp_rx,
+            log_reader,
+        )
     });
 
     // Main thread becomes request thread - owns Request and does all formatting
@@ -178,8 +189,9 @@ fn render_interactive_impl<'scope, 'env: 'scope>(
 fn ui_thread_loop<'a>(
     render_context: RenderContext,
     interactive_theme: InteractiveTheme,
-    cmd_tx: Sender<UiCommand<'a>>,
-    resp_rx: Receiver<RequestResponse<'a>>,
+    cmd_tx: crossbeam_channel::Sender<UiCommand<'a>>,
+    resp_rx: crossbeam_channel::Receiver<RequestResponse<'a>>,
+    log_reader: LogReader,
 ) -> io::Result<()> {
     // Set up terminal
     enable_raw_mode()?;
@@ -205,34 +217,88 @@ fn ui_thread_loop<'a>(
         resp_rx,
         render_context,
         interactive_theme,
+        log_reader,
     );
 
-    // Main event loop
-    let result = loop {
-        if state.handle_messages() {
-            break Ok(());
+    // Spawn event reader thread that blocks on crossterm events
+    let (event_tx, event_rx) = crossbeam_channel::unbounded();
+    let _event_reader = thread::spawn(move || {
+        loop {
+            match event::read() {
+                Ok(evt) => {
+                    if event_tx.send(evt).is_err() {
+                        // UI thread dropped receiver, exit
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
         }
+    });
 
-        terminal.draw(|frame| state.render_frame(frame))?;
+    // Initial render before entering event loop
+    terminal.draw(|frame| state.render_frame(frame))?;
+    state.update_cursor(&mut terminal);
 
-        state.update_cursor(&mut terminal);
-        state.handle_hover();
-        state.handle_click();
+    // Main event loop using select! for efficient blocking
+    let result = loop {
+        select! {
+            // Log notifications from request thread
+            recv(state.log_reader.notify_receiver()) -> _ => {
+                // Only show log messages while loading (don't override "Loaded: ..." message)
+                if state.loading.pending_request {
+                    // We already received the notification in select!, so directly peek
+                    if let Some(latest) = state.log_reader.peek_latest() {
+                        // Only update if we're in normal mode (don't override input prompts)
+                        if matches!(state.ui_mode, UiMode::Normal) {
+                            state.ui.debug_message = latest;
+                        }
+                    }
+                }
+            }
 
-        // Handle events with timeout for hover updates
-        if event::poll(Duration::from_millis(50))? {
-            match event::read()? {
-                Event::Key(key) => {
-                    if state.handle_key_event(key, &mut terminal) {
+            // Request responses (documents, errors, shutdown)
+            recv(state.resp_rx) -> response => {
+                match response {
+                    Ok(response) => {
+                        if state.handle_response(response) {
+                            break Ok(());
+                        }
+                    }
+                    Err(_) => {
+                        // Request thread dropped sender, exit
                         break Ok(());
                     }
                 }
+            }
 
-                Event::Mouse(mouse_event) => state.handle_mouse_event(mouse_event, &terminal),
-
-                _ => {}
+            // Keyboard and mouse events
+            recv(event_rx) -> event => {
+                match event {
+                    Ok(Event::Key(key)) => {
+                        if state.handle_key_event(key, &mut terminal) {
+                            break Ok(());
+                        }
+                    }
+                    Ok(Event::Mouse(mouse_event)) => {
+                        state.handle_mouse_event(mouse_event, &terminal);
+                    }
+                    Ok(_) => {}
+                    Err(_) => {
+                        // Event reader thread exited
+                        break Ok(());
+                    }
+                }
             }
         }
+
+        // Update UI state
+        state.handle_hover();
+        state.handle_click();
+
+        // Render
+        terminal.draw(|frame| state.render_frame(frame))?;
+        state.update_cursor(&mut terminal);
     };
 
     // Clean up terminal
@@ -259,14 +325,24 @@ pub fn render_to_test_backend(
     render_context: RenderContext,
 ) -> ratatui::backend::TestBackend {
     use ratatui::{Terminal, backend::TestBackend};
-    use std::sync::mpsc::channel;
 
-    let (cmd_tx, _cmd_rx) = channel();
-    let (_resp_tx, resp_rx) = channel();
+    let (cmd_tx, _cmd_rx) = crossbeam_channel::unbounded();
+    let (_resp_tx, resp_rx) = crossbeam_channel::unbounded();
     let theme = InteractiveTheme::from_render_context(&render_context);
 
-    let mut state =
-        state::InteractiveState::new(document, None, cmd_tx, resp_rx, render_context, theme);
+    // Create a dummy log reader for tests
+    let (log_backend, log_reader) = crate::logging::StatusLogBackend::new(100);
+    // Don't install it globally for tests, just pass the reader
+
+    let mut state = state::InteractiveState::new(
+        document,
+        None,
+        cmd_tx,
+        resp_rx,
+        render_context,
+        theme,
+        log_reader,
+    );
     let backend = TestBackend::new(80, 200); // Tall virtual terminal to capture all content
     let mut terminal = Terminal::new(backend).unwrap();
 

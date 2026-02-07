@@ -4,17 +4,24 @@ use super::channels::{RequestResponse, UiCommand};
 use super::history::{History, HistoryEntry};
 use super::theme::InteractiveTheme;
 use super::utils::supports_cursor_shape;
+use crate::logging::LogReader;
 use crate::render_context::{RenderContext, ThemeError};
 use crate::styled_string::{Document, NodePath, TuiAction};
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender};
 
 /// UI mode - makes the modal structure of the interface explicit
 #[derive(Debug)]
-pub(super) enum UiMode {
+pub(super) enum UiMode<'a> {
     /// Normal browsing mode
     Normal,
     /// Help screen
     Help,
+    /// Developer log viewer (undocumented debug feature)
+    /// Stores the previous state so we can restore it on exit
+    DevLog {
+        previous_document: Document<'a>,
+        previous_scroll: u16,
+    },
     /// Input mode (go-to or search)
     Input(InputMode),
     /// Theme picker modal
@@ -94,13 +101,14 @@ pub(super) struct InteractiveState<'a> {
     pub viewport: ViewportState,
     pub render_cache: RenderCache<'a>,
     pub layout: LayoutState,
-    pub ui_mode: UiMode,
+    pub ui_mode: UiMode<'a>,
     pub ui: UiState,
     pub loading: LoadingState,
 
     // Thread communication
     pub cmd_tx: Sender<UiCommand<'a>>,
     pub resp_rx: Receiver<RequestResponse<'a>>,
+    pub log_reader: LogReader,
 
     // Rendering config
     pub render_context: RenderContext,
@@ -117,6 +125,7 @@ impl<'a> InteractiveState<'a> {
         resp_rx: Receiver<RequestResponse<'a>>,
         render_context: RenderContext,
         theme: InteractiveTheme,
+        log_reader: LogReader,
     ) -> Self {
         let current_theme_name = render_context
             .current_theme_name()
@@ -159,6 +168,7 @@ impl<'a> InteractiveState<'a> {
             },
             cmd_tx,
             resp_rx,
+            log_reader,
             render_context,
             theme,
             current_theme_name,

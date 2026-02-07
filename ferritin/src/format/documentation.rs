@@ -70,13 +70,13 @@ impl Request {
         // Check if this is a relative HTML URL (e.g., "task/index.html", "attr.main.html")
         // These are hand-written markdown links in the source that point to HTML docs
         if path.ends_with(".html") || path.contains("/") {
-            log::debug!("extract_link_target: parsing relative URL '{}'", path);
+            log::trace!("extract_link_target: parsing relative URL '{}'", path);
 
             // Try to extract the item path from the HTML filename for navigation
             if let Some(item_path) = self.parse_html_path_to_item_path(origin, path) {
                 // Convert to absolute docs.rs URL
                 let absolute_url = self.make_relative_url_absolute(origin, path);
-                log::debug!(
+                log::trace!(
                     "  → Extracted item path: '{}', URL: '{}'",
                     item_path,
                     absolute_url
@@ -87,12 +87,12 @@ impl Request {
                 ));
             } else {
                 // Can't parse to an item path - return None to keep as external URL
-                log::debug!("  → Could not extract item path, keeping as external URL");
+                log::trace!("  → Could not extract item path, keeping as external URL");
                 return None;
             }
         }
 
-        log::debug!("extract_link_target: processing link '{}'", path);
+        log::trace!("extract_link_target: processing link '{}'", path);
 
         // Try to get the path from rustdoc's pre-resolved links map
         // Rustdoc sometimes stores links with backticks, sometimes without
@@ -103,12 +103,12 @@ impl Request {
             .or_else(|| origin.links.get(&format!("`{}`", path)));
 
         if let Some(link_id) = link_id {
-            log::debug!("  ✓ Found in origin.links with ID {:?}", link_id);
+            log::trace!("  ✓ Found in origin.links with ID {:?}", link_id);
             // Check if it's in the same crate (fast path - no external loading)
             if let Some(item) = origin.get(link_id) {
                 // Generate accurate URL and return resolved DocRef
                 let url = generate_docsrs_url(item);
-                log::debug!(
+                log::trace!(
                     "  → Same-crate item: path='{}', kind={:?}, URL='{}'",
                     self.get_item_full_path(item),
                     item.kind(),
@@ -117,10 +117,10 @@ impl Request {
                 return Some((url, LinkTarget::Resolved(item)));
             }
 
-            log::debug!("  → Not in same crate index, checking external paths");
+            log::trace!("  → Not in same crate index, checking external paths");
             // It's in an external crate - extract path from item_summary without loading
             if let Some(item_summary) = origin.crate_docs().paths.get(link_id) {
-                log::debug!(
+                log::trace!(
                     "  ✓ Found in paths map: {:?}, kind: {:?}",
                     item_summary.path,
                     item_summary.kind
@@ -155,7 +155,7 @@ impl Request {
 
         // Fallback: try to resolve path relative to current crate
         // Handle "crate::", "self::", and absolute paths
-        log::debug!("  ✗ Not found in links map, using fallback for '{}'", path);
+        log::trace!("  ✗ Not found in links map, using fallback for '{}'", path);
         let qualified_path = if let Some(rest) = path.strip_prefix("crate::") {
             format!("{}::{}", origin.crate_docs().name(), rest)
         } else if let Some(rest) = path.strip_prefix("self::") {
@@ -167,7 +167,7 @@ impl Request {
         };
 
         // Generate a search URL since we don't know the actual item kind
-        log::debug!(
+        log::trace!(
             "  → Qualified path: '{}', generating search URL",
             qualified_path
         );

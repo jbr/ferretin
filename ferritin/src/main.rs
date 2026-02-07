@@ -24,6 +24,7 @@ mod format;
 mod format_context;
 mod generate_docsrs_url;
 mod indent;
+mod logging;
 mod markdown;
 mod render_context;
 mod renderer;
@@ -92,7 +93,6 @@ where
 }
 
 fn main() -> ExitCode {
-    env_logger::init();
     let cli = Cli::parse();
 
     let path = cli
@@ -134,7 +134,14 @@ fn main() -> ExitCode {
 
     if cli.interactive {
         // Interactive mode with scrolling and navigation
-        if let Err(e) = renderer::render_interactive(&request, render_context, cli.command) {
+        // Install custom log backend that captures logs for status bar
+        let (log_backend, log_reader) = logging::StatusLogBackend::new(10_000);
+        if let Err(e) = log_backend.install() {
+            eprintln!("Failed to install log backend: {}", e);
+            return ExitCode::FAILURE;
+        }
+
+        if let Err(e) = renderer::render_interactive(&request, render_context, cli.command, log_reader) {
             eprintln!("Interactive mode error: {}", e);
             return ExitCode::FAILURE;
         }
@@ -142,6 +149,8 @@ fn main() -> ExitCode {
     }
 
     // One-shot mode: execute command and render to stdout
+    // Use env_logger for CLI mode
+    env_logger::init();
     let (document, is_error, _initial_entry) =
         cli.command.unwrap_or_else(Commands::list).execute(&request);
 

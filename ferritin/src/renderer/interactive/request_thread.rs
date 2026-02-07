@@ -4,7 +4,7 @@ use super::channels::{RequestResponse, UiCommand};
 use super::history::HistoryEntry;
 use crate::commands::{list, search};
 use crate::{request::Request, styled_string::Document};
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender};
 
 /// Request thread loop - processes commands from UI thread
 pub(super) fn request_thread_loop<'a>(
