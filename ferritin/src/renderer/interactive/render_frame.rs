@@ -8,8 +8,6 @@ use crate::styled_string::NodePath;
 
 impl<'a> InteractiveState<'a> {
     pub(super) fn render_frame(&mut self, frame: &mut Frame) {
-        self.loading.frame_count = self.loading.frame_count.wrapping_add(1);
-
         // Reserve last 2 lines for status bars
         let main_area = Rect {
             x: frame.area().x,

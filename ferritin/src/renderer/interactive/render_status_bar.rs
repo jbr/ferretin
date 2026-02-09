@@ -26,7 +26,9 @@ impl<'a> InteractiveState<'a> {
         // Spinner characters that cycle
         const SPINNER: &[char] = &['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
         let spinner_char = if self.loading.pending_request {
-            SPINNER[(self.loading.frame_count as usize / 2) % SPINNER.len()]
+            let elapsed_ms = self.loading.started_at.elapsed().as_millis();
+            let frame_index = (elapsed_ms / 80) as usize % SPINNER.len(); // ~80ms per frame
+            SPINNER[frame_index]
         } else {
             ' '
         };
@@ -36,7 +38,9 @@ impl<'a> InteractiveState<'a> {
             UiMode::Normal | UiMode::Help | UiMode::DevLog { .. } => {
                 (self.ui.debug_message.clone(), None)
             }
-            UiMode::Input(InputMode::GoTo { buffer }) => (format!("Go to: {}", buffer), None),
+            UiMode::Input(InputMode::GoTo { buffer }) => {
+                (format!("Go to: {}", buffer).into(), None)
+            }
             UiMode::Input(InputMode::Search { buffer, all_crates }) => {
                 let scope = if *all_crates {
                     "all crates".to_string()
@@ -46,7 +50,7 @@ impl<'a> InteractiveState<'a> {
                         .unwrap_or_else(|| "current crate".to_string())
                 };
                 (
-                    format!("Search in {}: {}", scope, buffer),
+                    format!("Search in {}: {}", scope, buffer).into(),
                     Some("[tab] toggle scope"),
                 )
             }
@@ -58,7 +62,7 @@ impl<'a> InteractiveState<'a> {
 
         // Prepend spinner if loading
         if self.loading.pending_request {
-            display_text = format!("{} {}", spinner_char, display_text);
+            display_text = format!("{} {}", spinner_char, display_text).into();
         }
 
         // Calculate space for hint text (accounting for left margin)

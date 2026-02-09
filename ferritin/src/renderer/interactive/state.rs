@@ -1,4 +1,6 @@
 use ratatui::layout::{Position, Rect};
+use std::borrow::Cow;
+use std::time::Instant;
 
 use super::channels::{RequestResponse, UiCommand};
 use super::history::{History, HistoryEntry};
@@ -67,7 +69,7 @@ pub(super) struct RenderCache<'a> {
 #[derive(Debug)]
 pub(super) struct UiState {
     pub mouse_enabled: bool,
-    pub debug_message: String,
+    pub debug_message: Cow<'static, str>,
     pub is_hovering: bool,
     pub supports_cursor: bool,
     pub include_source: bool,
@@ -78,7 +80,14 @@ pub(super) struct UiState {
 pub(super) struct LoadingState {
     pub pending_request: bool,
     pub was_loading: bool,
-    pub frame_count: u32,
+    pub started_at: Instant,
+}
+
+impl LoadingState {
+    pub fn start(&mut self) {
+        self.pending_request = true;
+        self.started_at = Instant::now();
+    }
 }
 
 /// Layout state - cursor position, indentation, and viewport
@@ -154,9 +163,8 @@ impl<'a> InteractiveState<'a> {
             ui_mode: UiMode::Normal,
             ui: UiState {
                 mouse_enabled: true,
-                debug_message: String::from(
-                    "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code",
-                ),
+                debug_message: "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code"
+                    .into(),
                 is_hovering: false,
                 supports_cursor: supports_cursor_shape(),
                 include_source: false,
@@ -164,7 +172,7 @@ impl<'a> InteractiveState<'a> {
             loading: LoadingState {
                 pending_request: true,
                 was_loading: false,
-                frame_count: 0,
+                started_at: Instant::now(),
             },
             cmd_tx,
             resp_rx,

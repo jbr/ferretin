@@ -1,3 +1,5 @@
+use crate::renderer::interactive::UiMode;
+
 use super::InteractiveState;
 use super::channels::RequestResponse;
 
@@ -10,8 +12,8 @@ impl<'a> InteractiveState<'a> {
             // There are new logs, peek at the latest status message
             if let Some(latest) = self.log_reader.peek_latest() {
                 // Only update if we're in normal mode (don't override input mode prompts)
-                if matches!(self.ui_mode, super::state::UiMode::Normal) {
-                    self.ui.debug_message = latest;
+                if matches!(self.ui_mode, UiMode::Normal) {
+                    self.ui.debug_message = latest.into();
                 }
             }
         }
@@ -30,14 +32,14 @@ impl<'a> InteractiveState<'a> {
                 if let Some(new_entry) = entry {
                     self.document.history.push(new_entry);
                     if let Some(history_entry) = self.document.history.current() {
-                        self.ui.debug_message = format!("Loaded: {history_entry}",);
+                        self.ui.debug_message = format!("Loaded: {history_entry}").into();
                     }
                 }
                 false
             }
 
             RequestResponse::Error(err) => {
-                self.ui.debug_message = err;
+                self.ui.debug_message = err.into();
                 false
             }
 

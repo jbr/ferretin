@@ -244,6 +244,9 @@ fn ui_thread_loop<'a>(
         }
     });
 
+    // Timer for spinner animation during loading - fires every 30ms
+    let timer_tick = crossbeam_channel::tick(std::time::Duration::from_millis(30));
+
     // Initial render before entering event loop
     terminal.draw(|frame| state.render_frame(frame))?;
     state.update_cursor(&mut terminal);
@@ -259,10 +262,18 @@ fn ui_thread_loop<'a>(
                     if let Some(latest) = state.log_reader.peek_latest() {
                         // Only update if we're in normal mode (don't override input prompts)
                         if matches!(state.ui_mode, UiMode::Normal) {
-                            state.ui.debug_message = latest;
+                            state.ui.debug_message = latest.into();
                         }
                     }
                 }
+            }
+
+            // Timer ticks for spinner animation - only render if loading
+            recv(timer_tick) -> _ => {
+                if !state.loading.pending_request {
+                    continue; // Skip render if not loading
+                }
+                // Fall through to render below
             }
 
             // Request responses (documents, errors, shutdown)

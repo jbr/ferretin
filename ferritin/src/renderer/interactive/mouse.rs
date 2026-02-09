@@ -98,8 +98,10 @@ impl<'a> super::InteractiveState<'a> {
                     {
                         // Send command from history entry (non-blocking)
                         let _ = self.cmd_tx.send(entry.to_command());
-                        self.loading.pending_request = true;
-                        self.ui.debug_message = format!("Loading: {}...", entry.display_name());
+
+                        self.loading.start();
+                        self.ui.debug_message =
+                            format!("Loading: {}...", entry.display_name()).into();
                     }
                 }
             }
@@ -135,7 +137,7 @@ impl<'a> super::InteractiveState<'a> {
                         }
                     }
 
-                    self.ui.debug_message = format!("Selected theme: {}", theme_name);
+                    self.ui.debug_message = format!("Selected theme: {theme_name}").into();
                     return;
                 }
 
@@ -146,10 +148,13 @@ impl<'a> super::InteractiveState<'a> {
                             .path()
                             .map(|p| p.to_string())
                             .unwrap_or_else(|| "unknown".to_string())
-                    ),
-                    TuiAction::NavigateToPath { path, url: _ } => format!("Clicked: {}", path),
-                    TuiAction::ExpandBlock(path) => format!("Clicked: {:?}", path.indices()),
-                    TuiAction::OpenUrl(url) => format!("Clicked: {}", url),
+                    )
+                    .into(),
+                    TuiAction::NavigateToPath { path, url: _ } => {
+                        format!("Clicked: {}", path).into()
+                    }
+                    TuiAction::ExpandBlock(path) => format!("Clicked: {:?}", path.indices()).into(),
+                    TuiAction::OpenUrl(url) => format!("Clicked: {}", url).into(),
                     TuiAction::SelectTheme(_) => unreachable!(), // Handled above
                 };
 
@@ -157,8 +162,8 @@ impl<'a> super::InteractiveState<'a> {
                 if let Some(command) = handle_action(&mut self.document.document, action) {
                     // Send command to request thread (non-blocking)
                     let _ = self.cmd_tx.send(command);
-                    self.loading.pending_request = true;
-                    self.ui.debug_message = "Loading...".to_string();
+                    self.loading.start();
+                    self.ui.debug_message = "Loading...".into();
                 }
             }
         }
@@ -177,24 +182,22 @@ impl<'a> super::InteractiveState<'a> {
                     self.ui.debug_message = match action {
                         TuiAction::Navigate { doc_ref, url: _ } => {
                             if let Some(path) = doc_ref.path() {
-                                format!("Navigate: {}", path)
+                                format!("Navigate: {path}").into()
                             } else if let Some(name) = doc_ref.name() {
-                                format!("Navigate: {}", name)
+                                format!("Navigate: {name}").into()
                             } else {
-                                "Navigate: <unknown>".to_string()
+                                "Navigate: <unknown>".into()
                             }
                         }
                         TuiAction::NavigateToPath { path, url: _ } => {
-                            format!("Go to: {}", path)
+                            format!("Go to: {}", path).into()
                         }
                         TuiAction::ExpandBlock(path) => {
-                            format!("Expand: {:?}", path.indices())
+                            format!("Expand: {:?}", path.indices()).into()
                         }
-                        TuiAction::OpenUrl(url) => {
-                            format!("Open: {}", url)
-                        }
+                        TuiAction::OpenUrl(url) => format!("Open: {}", url).into(),
                         TuiAction::SelectTheme(theme_name) => {
-                            format!("Preview theme: {}", theme_name)
+                            format!("Preview theme: {}", theme_name).into()
                         }
                     };
                 } else {
@@ -204,14 +207,16 @@ impl<'a> super::InteractiveState<'a> {
                         pos.y,
                         self.viewport.scroll_offset,
                         if self.ui.include_source { "ON" } else { "OFF" }
-                    );
+                    )
+                    .into();
                 }
             }
         } else {
             self.ui.debug_message = format!(
                 "Mouse: OFF (text selection enabled - m to re-enable) | Source: {}",
                 if self.ui.include_source { "ON" } else { "OFF" }
-            );
+            )
+            .into();
         }
     }
 
