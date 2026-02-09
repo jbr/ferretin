@@ -17,27 +17,30 @@ impl<'a> InteractiveState<'a> {
     ) -> bool {
         // Always allow Escape to exit help, cancel input mode, or quit
         if key.code == KeyCode::Esc {
-            match self.ui_mode {
+            match std::mem::replace(&mut self.ui_mode, UiMode::Normal) {
                 UiMode::Help => {
-                    self.ui_mode = UiMode::Normal;
+                    // Already set to Normal by replace
+                }
+                UiMode::DevLog {
+                    previous_document,
+                    previous_scroll,
+                } => {
+                    // Restore previous state
+                    self.document.document = previous_document;
+                    self.viewport.scroll_offset = previous_scroll;
                 }
                 UiMode::Input(_) => {
-                    self.ui_mode = UiMode::Normal;
+                    // Already set to Normal by replace
                     self.ui.debug_message =
-                        "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code"
-                            .to_string();
+                        "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code".into();
                 }
                 UiMode::ThemePicker {
-                    ref saved_theme_name,
-                    ..
+                    saved_theme_name, ..
                 } => {
-                    // Revert to saved theme on cancel
-                    let theme_name = saved_theme_name.clone();
-                    self.ui_mode = UiMode::Normal;
-                    let _ = self.apply_theme(&theme_name);
+                    // Already set to Normal by replace, just revert theme
+                    let _ = self.apply_theme(&saved_theme_name);
                     self.ui.debug_message =
-                        "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code"
-                            .to_string();
+                        "ferritin - q:quit ?:help ←/→:history g:go s:search l:list c:code".into();
                 }
                 UiMode::Normal => {
                     return true;
@@ -70,7 +73,7 @@ impl<'a> InteractiveState<'a> {
                     // Execute the command based on current input mode
                     let command = match input_mode {
                         InputMode::GoTo { buffer } => {
-                            self.ui.debug_message = format!("Loading: {}...", buffer);
+                            self.ui.debug_message = format!("Loading: {buffer}...").into();
                             Some(UiCommand::NavigateToPath(Cow::Owned(buffer.clone())))
                         }
                         InputMode::Search { buffer, all_crates } => {
@@ -82,10 +85,10 @@ impl<'a> InteractiveState<'a> {
                                     .history
                                     .current()
                                     .and_then(|entry| entry.crate_name())
-                                    .map(|s| Cow::Owned(s.to_string()))
+                                    .map(|s| Cow::Owned(s.into()))
                             };
 
-                            self.ui.debug_message = format!("Searching: {}...", buffer);
+                            self.ui.debug_message = format!("Searching: {buffer}...").into();
                             Some(UiCommand::Search {
                                 query: Cow::Owned(buffer.clone()),
                                 crate_name: search_crate,
@@ -96,7 +99,7 @@ impl<'a> InteractiveState<'a> {
 
                     if let Some(cmd) = command {
                         let _ = self.cmd_tx.send(cmd);
-                        self.loading.pending_request = true;
+                        self.loading.start();
                     }
                     self.ui_mode = UiMode::Normal;
                 }
@@ -137,9 +140,9 @@ impl<'a> InteractiveState<'a> {
                     let theme_name = self
                         .current_theme_name
                         .clone()
-                        .unwrap_or_else(|| "default".to_string());
+                        .unwrap_or_else(|| "default".into());
                     self.ui_mode = UiMode::Normal;
-                    self.ui.debug_message = format!("Theme saved: {}", theme_name);
+                    self.ui.debug_message = format!("Theme saved: {theme_name}").into();
                 }
                 _ => {}
             }
@@ -181,6 +184,46 @@ impl<'a> InteractiveState<'a> {
                         self.viewport.scroll_offset.saturating_sub(page_size);
                 }
 
+                // Dump logs to disk (undocumented debug feature)
+                (KeyCode::Char('l'), KeyModifiers::ALT) => match self.dump_logs_to_disk() {
+                    Ok(filename) => {
+                        self.ui.debug_message = format!("Logs saved to {}", filename).into();
+                    }
+                    Err(e) => {
+                        self.ui.debug_message = format!("Failed to save logs: {}", e).into();
+                    }
+                },
+
+                // Toggle dev log (undocumented debug feature)
+                (KeyCode::Char('l'), KeyModifiers::CONTROL) => {
+                    match std::mem::replace(&mut self.ui_mode, UiMode::Normal) {
+                        UiMode::DevLog {
+                            previous_document,
+                            previous_scroll,
+                        } => {
+                            // Exiting dev log - restore previous state
+                            self.document.document = previous_document;
+                            self.viewport.scroll_offset = previous_scroll;
+                        }
+                        UiMode::Normal => {
+                            // Entering dev log - swap in dev log document
+                            let dev_log_doc = self.create_dev_log_document();
+                            let previous_document =
+                                std::mem::replace(&mut self.document.document, dev_log_doc);
+                            let previous_scroll = self.viewport.scroll_offset;
+                            self.viewport.scroll_offset = 0;
+                            self.ui_mode = UiMode::DevLog {
+                                previous_document,
+                                previous_scroll,
+                            };
+                        }
+                        other => {
+                            // Was in a different mode, restore it
+                            self.ui_mode = other;
+                        }
+                    }
+                }
+
                 // Jump to top
                 (KeyCode::Home, _) => {
                     self.viewport.scroll_offset = 0;
@@ -210,8 +253,8 @@ impl<'a> InteractiveState<'a> {
                 (KeyCode::Char('l'), _) => {
                     // Send List command to request thread (non-blocking)
                     let _ = self.cmd_tx.send(UiCommand::List);
-                    self.loading.pending_request = true;
-                    self.ui.debug_message = "Loading crate list...".to_string();
+                    self.loading.start();
+                    self.ui.debug_message = "Loading crate list...".into();
                 }
 
                 // Toggle mouse mode for text selection
@@ -219,12 +262,11 @@ impl<'a> InteractiveState<'a> {
                     self.ui.mouse_enabled = !self.ui.mouse_enabled;
                     if self.ui.mouse_enabled {
                         let _ = execute!(terminal.backend_mut(), EnableMouseCapture);
-                        self.ui.debug_message = "Mouse enabled (hover/click)".to_string();
+                        self.ui.debug_message = "Mouse enabled (hover/click)".into();
                     } else {
                         let _ = execute!(terminal.backend_mut(), DisableMouseCapture);
                         self.viewport.cursor_pos = None; // Clear cursor position
-                        self.ui.debug_message =
-                            "Mouse disabled (text selection enabled)".to_string();
+                        self.ui.debug_message = "Mouse disabled (text selection enabled)".into();
                     }
                 }
 
@@ -237,9 +279,9 @@ impl<'a> InteractiveState<'a> {
                         current_item: self.document.history.current().and_then(|e| e.item()),
                     });
                     self.ui.debug_message = if self.ui.include_source {
-                        "Source code display enabled".to_string()
+                        "Source code display enabled".into()
                     } else {
-                        "Source code display disabled".to_string()
+                        "Source code display disabled".into()
                     };
                 }
 
@@ -260,7 +302,7 @@ impl<'a> InteractiveState<'a> {
                         saved_theme_name: current_theme,
                     };
                     self.ui.debug_message =
-                        "Select theme (↑/↓ to navigate, Enter to save, Esc to cancel)".to_string();
+                        "Select theme (↑/↓ to navigate, Enter to save, Esc to cancel)".into();
                 }
 
                 // Show help
@@ -273,10 +315,11 @@ impl<'a> InteractiveState<'a> {
                     if let Some(entry) = self.document.history.go_back() {
                         // Send command from history entry (non-blocking)
                         let _ = self.cmd_tx.send(entry.to_command());
-                        self.loading.pending_request = true;
-                        self.ui.debug_message = format!("Loading: {}...", entry.display_name());
+                        self.loading.start();
+                        self.ui.debug_message =
+                            format!("Loading: {}...", entry.display_name()).into();
                     } else {
-                        self.ui.debug_message = "Already at beginning of history".to_string();
+                        self.ui.debug_message = "Already at beginning of history".into();
                     }
                 }
 
@@ -285,10 +328,11 @@ impl<'a> InteractiveState<'a> {
                     if let Some(entry) = self.document.history.go_forward() {
                         // Send command from history entry (non-blocking)
                         let _ = self.cmd_tx.send(entry.to_command());
-                        self.loading.pending_request = true;
-                        self.ui.debug_message = format!("Loading: {}...", entry.display_name());
+                        self.loading.start();
+                        self.ui.debug_message =
+                            format!("Loading: {}...", entry.display_name()).into();
                     } else {
-                        self.ui.debug_message = "Already at end of history".to_string();
+                        self.ui.debug_message = "Already at end of history".into();
                     }
                 }
 

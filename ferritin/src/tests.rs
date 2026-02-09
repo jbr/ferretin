@@ -25,6 +25,16 @@ fn create_test_state() -> Request {
     Request::new(navigator, FormatContext::new())
 }
 
+/// Convert OSC8 hyperlinks to markdown-style [text](url) before stripping ANSI
+fn convert_osc8_to_markdown(text: &str) -> String {
+    use regex::Regex;
+
+    // OSC8 format: ESC]8;;URL ESC\TEXT ESC]8;; ESC\
+    let re = Regex::new("\x1B\\]8;;([^\x1B]*)\x1B\\\\(.*?)\x1B\\]8;;\x1B\\\\").unwrap();
+
+    re.replace_all(text, "[$2]($1)").to_string()
+}
+
 fn render_for_tests(command: Commands, output_mode: OutputMode) -> String {
     let request = create_test_state();
     let (document, _, _) = command.execute(&request);
@@ -32,9 +42,11 @@ fn render_for_tests(command: Commands, output_mode: OutputMode) -> String {
     let render_context = RenderContext::new().with_output_mode(output_mode);
     render(&document, &render_context, &mut output).unwrap();
 
-    // Strip ANSI codes for TTY mode to make snapshots readable
+    // For TTY mode: convert OSC8 links to markdown, then strip remaining ANSI codes
     let output = if matches!(output_mode, OutputMode::Tty) {
-        String::from_utf8(strip_ansi_escapes::strip(output.as_bytes())).unwrap_or(output)
+        let with_markdown_links = convert_osc8_to_markdown(&output);
+        String::from_utf8(strip_ansi_escapes::strip(with_markdown_links.as_bytes()))
+            .unwrap_or(with_markdown_links)
     } else {
         output
     };
@@ -46,7 +58,13 @@ fn render_for_tests(command: Commands, output_mode: OutputMode) -> String {
         .unwrap_or(test_crate_path)
         .to_string_lossy()
         .to_string();
-    output.replace(&test_crate_path_str, "/TEST_CRATE_ROOT")
+    let output = output.replace(&test_crate_path_str, "/TEST_CRATE_ROOT");
+
+    // Normalize Rust version info to avoid daily breakage with nightly updates
+    // Matches patterns like: 1.95.0-nightly	(f889772d6	2026-02-05)
+    let re =
+        regex::Regex::new(r"\d+\.\d+\.\d+-[a-z]+\s+\([a-f0-9]+\s+\d{4}-\d{2}-\d{2}\)").unwrap();
+    re.replace_all(&output, "RUST_VERSION").to_string()
 }
 
 fn render_interactive_for_tests(command: Commands) -> TestBackend {
@@ -92,6 +110,9 @@ macro_rules! test_all_modes {
                 // Strip trailing whitespace from lines containing the replaced path
                 // to avoid snapshot differences due to fixed-width TUI padding
                 settings.add_filter(r#"(?m)(.*TEST_CRATE_ROOT[^"]+?)\s+"$"#, r#"$1""#);
+                // Normalize Rust version info to avoid daily breakage with nightly updates
+                // Matches patterns like: 1.95.0-nightly	(f889772d6	2026-02-05)
+                settings.add_filter(r"\d+\.\d+\.\d+-[a-z]+\s+\([a-f0-9]+\s+\d{4}-\d{2}-\d{2}\)", "RUST_VERSION");
                 settings.bind(|| {
                     insta::assert_snapshot!(render_interactive_for_tests($cmd));
                 });

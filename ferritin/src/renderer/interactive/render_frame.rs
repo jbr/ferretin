@@ -8,8 +8,6 @@ use crate::styled_string::NodePath;
 
 impl<'a> InteractiveState<'a> {
     pub(super) fn render_frame(&mut self, frame: &mut Frame) {
-        self.loading.frame_count = self.loading.frame_count.wrapping_add(1);
-
         // Reserve last 2 lines for status bars
         let main_area = Rect {
             x: frame.area().x,
@@ -37,6 +35,8 @@ impl<'a> InteractiveState<'a> {
             let help_area = frame.area();
             self.render_help_screen(frame.buffer_mut(), help_area);
         } else {
+            // Normal mode or DevLog mode - both render self.document.document
+            // (DevLog has already swapped in its document)
             // Clear main area with theme background
             for y in 0..main_area.height {
                 for x in 0..main_area.width {
@@ -57,10 +57,16 @@ impl<'a> InteractiveState<'a> {
             // Render main document
             self.render_document(main_area, frame.buffer_mut());
 
-            // Render breadcrumb bar with full history
-            self.document
-                .history
-                .render(frame.buffer_mut(), breadcrumb_area, &self.theme);
+            // Render breadcrumb bar or loading animation
+            if self.loading.pending_request {
+                // Show loading animation in breadcrumb area
+                self.render_loading_bar(frame.buffer_mut(), breadcrumb_area);
+            } else {
+                // Show normal breadcrumb/history bar
+                self.document
+                    .history
+                    .render(frame.buffer_mut(), breadcrumb_area, &self.theme);
+            }
 
             // Render status bar
             self.render_status_bar(frame.buffer_mut(), status_area);

@@ -1,6 +1,7 @@
 use crate::sources::CrateProvenance;
 use crate::{RustdocData, sources::RustdocVersion};
 use anyhow::{Context, Result, anyhow};
+use fieldwork::Fieldwork;
 use rustdoc_types::FORMAT_VERSION;
 use semver::{Version, VersionReq};
 use serde::Deserialize;
@@ -33,9 +34,10 @@ struct CrateVersion {
 const MIN_FORMAT_VERSION: u32 = 55;
 
 /// Client for fetching rustdoc JSON from docs.rs
-#[derive(Debug)]
+#[derive(Debug, Fieldwork)]
 pub struct DocsRsClient {
     http_client: Client,
+    #[field(get)]
     cache_dir: PathBuf,
     format_version: u32,
 }
@@ -144,19 +146,13 @@ impl DocsRsClient {
         let RustdocVersion {
             format_version,
             crate_version,
-        }: super::super::RustdocVersion =
-            serde_json::from_slice(&json).context("Failed to parse JSON metadata")?;
-
-        log::debug!(
-            "Fetched crate {} version {:?} with format version {}",
-            crate_name,
-            crate_version,
-            format_version
-        );
+        } = sonic_rs::serde::from_slice(&json).context("Failed to parse JSON metadata")?;
 
         let Some(crate_version) = crate_version else {
             return Ok(None);
         };
+
+        log::info!("Fetched crate {crate_name}@{crate_version}, format version {format_version}");
 
         // Save raw JSON to cache (indexed by source format version)
         let fs_path = self
@@ -164,7 +160,7 @@ impl DocsRsClient {
             .await?;
 
         // Normalize to current format version
-        let crate_data = crate::conversions::load_and_normalize(&json)
+        let crate_data = crate::conversions::load_and_normalize(&json, Some(format_version))
             .context("Failed to normalize rustdoc JSON")?;
 
         // Build RustdocData
@@ -215,7 +211,7 @@ impl DocsRsClient {
             .context("Failed to read crates.io response")?;
 
         let CratesIoResponse { krate, versions } =
-            serde_json::from_slice(&bytes).context("Failed to parse crates.io response")?;
+            sonic_rs::serde::from_slice(&bytes).context("Failed to parse crates.io response")?;
 
         Ok(Some((krate, versions.into_iter().map(|v| v.num).collect())))
     }
@@ -253,7 +249,7 @@ impl DocsRsClient {
                 continue;
             }
 
-            log::debug!(
+            log::info!(
                 "Found cached file with format version {}: {}",
                 source_format,
                 path.display()
@@ -264,7 +260,7 @@ impl DocsRsClient {
                 .await
                 .context("Failed to read cached file")?;
             let read_elapsed = start.elapsed();
-            log::info!(
+            log::debug!(
                 "⏱️ Read {} ({:.2} MB) in {:?}",
                 crate_name,
                 json.len() as f64 / 1_000_000.0,
@@ -273,10 +269,10 @@ impl DocsRsClient {
 
             // Normalize to current format version
             let start = std::time::Instant::now();
-            let crate_data = crate::conversions::load_and_normalize(&json)
+            let crate_data = crate::conversions::load_and_normalize(&json, Some(source_format))
                 .context("Failed to normalize cached JSON")?;
             let parse_elapsed = start.elapsed();
-            log::info!("⏱️ Parsed {} in {:?}", crate_name, parse_elapsed);
+            log::debug!("⏱️ Parsed {} in {:?}", crate_name, parse_elapsed);
 
             let version = crate_data
                 .crate_version
