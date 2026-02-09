@@ -9,7 +9,7 @@ repository = "https://github.com/jbr/ferritin"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-anyhow = "1.0.100"
+anyhow = "1.0.101"
 cargo_metadata = "0.23.1"
 cargo_toml = "0.22.3"
 elsa = "1.11.2"
