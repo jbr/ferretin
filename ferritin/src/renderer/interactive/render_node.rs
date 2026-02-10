@@ -56,8 +56,8 @@ impl<'a> InteractiveState<'a> {
 
                 // Add decorative underline (respecting left margin)
                 let underline_char = match level {
-                    HeadingLevel::Title => '=',
-                    HeadingLevel::Section => '-',
+                    HeadingLevel::Title => '═',
+                    HeadingLevel::Section => '┄',
                 };
 
                 // Draw blockquote markers on underline row

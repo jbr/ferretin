@@ -3,7 +3,7 @@ source: ferritin/src/tests.rs
 expression: "render_interactive_for_tests(Commands::search(\"generic struct\"))"
 ---
 "   Search results for 'generic struct'                                          "
-"   ============================================================================ "
+"   ════════════════════════════════════════════════════════════════════════════ "
 "                                                                                "
 "     ◦ test-crate::GenericStruct  (Struct) - score: 0.5                         "
 "     │ A generic struct for testing multi-paragraph documentation.              "
