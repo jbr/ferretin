@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/jbr/ferritin/compare/ferritin-v0.3.0...ferritin-v0.4.0) - 2026-02-10
+
+### Added
+
+- [**breaking**] improved search algorithm (BM25)
+
+### Other
+
+- remove unused deps
+
 ## [0.3.0](https://github.com/jbr/ferritin/compare/ferritin-v0.2.0...ferritin-v0.3.0) - 2026-02-09
 
 ### Added
