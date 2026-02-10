@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/jbr/ferritin/compare/rustdoc-mcp-v0.1.9...rustdoc-mcp-v0.2.0) - 2026-02-10
+
+### Added
+
+- [**breaking**] improved search algorithm (BM25)
+
 ## [0.1.9](https://github.com/jbr/ferritin/compare/rustdoc-mcp-v0.1.8...rustdoc-mcp-v0.1.9) - 2026-02-09
 
 ### Fixed
