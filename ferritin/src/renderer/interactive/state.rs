@@ -51,12 +51,25 @@ pub(super) struct DocumentState<'a> {
     pub history: History<'a>,
 }
 
+/// Cached document layout information
+#[derive(Debug, Clone, Copy)]
+pub(super) struct DocumentLayoutCache {
+    pub render_width: u16,
+    pub document_height: u16,
+}
+
 /// Viewport and scroll tracking
 #[derive(Debug)]
 pub(super) struct ViewportState {
     pub scroll_offset: u16,
     pub cursor_pos: Option<Position>,
     pub clicked_position: Option<Position>,
+    pub cached_layout: Option<DocumentLayoutCache>,
+    /// Last known viewport height for scroll clamping
+    pub last_viewport_height: u16,
+    /// Scrollbar hover/drag state
+    pub scrollbar_hovered: bool,
+    pub scrollbar_dragging: bool,
 }
 
 /// Rendering state computed each frame
@@ -149,6 +162,10 @@ impl<'a> InteractiveState<'a> {
                 scroll_offset: 0,
                 cursor_pos: None,
                 clicked_position: None,
+                cached_layout: None,
+                last_viewport_height: 0,
+                scrollbar_hovered: false,
+                scrollbar_dragging: false,
             },
             render_cache: RenderCache {
                 actions: Vec::new(),
@@ -195,5 +212,31 @@ impl<'a> InteractiveState<'a> {
         self.theme = InteractiveTheme::from_render_context(&self.render_context);
         self.current_theme_name = Some(theme_name.to_string());
         Ok(())
+    }
+
+    /// Set scroll offset with automatic clamping to valid range
+    pub(super) fn set_scroll_offset(&mut self, offset: u16) {
+        self.viewport.scroll_offset = offset;
+        // Clamp to valid range if we have layout info
+        if let Some(cache) = self.viewport.cached_layout {
+            let max_scroll = cache
+                .document_height
+                .saturating_sub(self.viewport.last_viewport_height);
+            self.viewport.scroll_offset = self.viewport.scroll_offset.min(max_scroll);
+        }
+    }
+
+    /// Check if position is in the scrollbar column
+    pub(super) fn is_in_scrollbar(&self, pos: Position, content_area_width: u16) -> bool {
+        // Scrollbar is at content_area_width (which is frame.width - 1)
+        pos.x == content_area_width && pos.y < self.viewport.last_viewport_height
+    }
+
+    /// Check if scrollbar should be visible (document taller than viewport)
+    pub(super) fn scrollbar_visible(&self) -> bool {
+        self.viewport
+            .cached_layout
+            .map(|cache| cache.document_height > self.viewport.last_viewport_height)
+            .unwrap_or(false)
     }
 }

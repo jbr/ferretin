@@ -68,7 +68,7 @@ option // Optional values. [+576 more lines]
 os // OS-specific functionality.
 panic // Panic support in the standard library.
 pat // Helper module for exporting the `pattern_type` macro
-path // Cross-platform path manipulation. [+64 more lines]
+path // Cross-platform path manipulation. [+77 more lines]
 pin // Types that pin data to a location in memory. [+916 more lines]
 prelude // # The Rust Prelude [+106 more lines]
 process // A module for working with processes. [+145 more lines]

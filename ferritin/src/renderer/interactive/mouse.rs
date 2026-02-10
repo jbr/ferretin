@@ -39,8 +39,14 @@ impl<'a> super::InteractiveState<'a> {
                 }
 
                 let terminal_height = size.height;
+                let terminal_width = size.width;
                 let content_height = terminal_height.saturating_sub(2); // Exclude 2 status lines
+                let content_width = terminal_width.saturating_sub(1); // Exclude scrollbar column
                 let breadcrumb_row = terminal_height.saturating_sub(2);
+
+                // Check if hovering over scrollbar
+                self.viewport.scrollbar_hovered =
+                    row < content_height && column == content_width && self.scrollbar_visible();
 
                 if row < content_height {
                     // Mouse in main content area
@@ -64,14 +70,14 @@ impl<'a> super::InteractiveState<'a> {
                 kind: MouseEventKind::ScrollDown,
                 ..
             } => {
-                self.viewport.scroll_offset = self.viewport.scroll_offset.saturating_add(1);
+                self.set_scroll_offset(self.viewport.scroll_offset.saturating_add(1));
             }
 
             MouseEvent {
                 kind: MouseEventKind::ScrollUp,
                 ..
             } => {
-                self.viewport.scroll_offset = self.viewport.scroll_offset.saturating_sub(1);
+                self.set_scroll_offset(self.viewport.scroll_offset.saturating_sub(1));
             }
 
             MouseEvent {
@@ -86,9 +92,16 @@ impl<'a> super::InteractiveState<'a> {
 
                 let terminal_height = size.height;
                 let content_height = terminal_height.saturating_sub(2); // Exclude 2 status lines
+                let content_width = size.width.saturating_sub(1); // Exclude scrollbar column
                 let breadcrumb_row = terminal_height.saturating_sub(2);
 
-                if row < content_height {
+                // Check if click is in scrollbar column
+                if row < content_height && column == content_width && self.scrollbar_visible() {
+                    // Start scrollbar drag
+                    self.viewport.scrollbar_dragging = true;
+                    // Calculate scroll position from click Y
+                    self.handle_scrollbar_drag(row, content_height);
+                } else if row < content_height {
                     // Click in main content area
                     self.viewport.clicked_position =
                         Some(Position::new(column, row + self.viewport.scroll_offset));
@@ -103,6 +116,29 @@ impl<'a> super::InteractiveState<'a> {
                         let _ = self.cmd_tx.send(entry.to_command());
                         self.loading.start();
                     }
+                }
+            }
+
+            MouseEvent {
+                kind: MouseEventKind::Drag(_),
+                row,
+                ..
+            } => {
+                if self.viewport.scrollbar_dragging {
+                    let Ok(size) = terminal.size() else {
+                        return;
+                    };
+                    let content_height = size.height.saturating_sub(2);
+                    self.handle_scrollbar_drag(row, content_height);
+                }
+            }
+
+            MouseEvent {
+                kind: MouseEventKind::Up(_),
+                ..
+            } => {
+                if self.viewport.scrollbar_dragging {
+                    self.viewport.scrollbar_dragging = false;
                 }
             }
             _ => { /*unhandled*/ }
@@ -138,10 +174,19 @@ impl<'a> super::InteractiveState<'a> {
                     }
 
                     self.ui.debug_message = format!("Selected theme: {theme_name}").into();
-                } else if let Some(command) = handle_action(&mut self.document.document, action) {
-                    // Send command to request thread (non-blocking)
-                    let _ = self.cmd_tx.send(command);
-                    self.loading.start();
+                } else {
+                    match handle_action(&mut self.document.document, action) {
+                        Some(command) => {
+                            // Send command to request thread (non-blocking)
+                            let _ = self.cmd_tx.send(command);
+                            self.loading.start();
+                        }
+                        None => {
+                            // Action mutated document in place (e.g., ExpandBlock)
+                            // Invalidate layout cache
+                            self.viewport.cached_layout = None;
+                        }
+                    }
                 }
             }
         }
@@ -201,6 +246,22 @@ impl<'a> super::InteractiveState<'a> {
         }
     }
 
+    /// Handle scrollbar drag by calculating scroll position from mouse Y
+    fn handle_scrollbar_drag(&mut self, mouse_y: u16, viewport_height: u16) {
+        if let Some(cache) = self.viewport.cached_layout {
+            let document_height = cache.document_height;
+
+            // Calculate what percentage of the scrollbar was clicked
+            let percentage = mouse_y as f32 / viewport_height as f32;
+
+            // Map to scroll range
+            let max_scroll = document_height.saturating_sub(viewport_height);
+            let target_scroll = (percentage * max_scroll as f32).round() as u16;
+
+            self.set_scroll_offset(target_scroll);
+        }
+    }
+
     pub(super) fn update_cursor(&mut self, terminal: &mut Terminal<impl Backend + Write>) {
         // Update cursor shape based on loading and hover state
         if self.ui.supports_cursor {
@@ -211,7 +272,11 @@ impl<'a> super::InteractiveState<'a> {
                     self.loading.was_loading = true;
                 }
             } else {
-                // When not loading, check hover self
+                // Check for scrollbar hover/drag
+                let scrollbar_hover = self.viewport.scrollbar_hovered;
+                let scrollbar_drag = self.viewport.scrollbar_dragging;
+
+                // When not loading, check hover state
                 let content_hover = self
                     .viewport
                     .cursor_pos
@@ -225,11 +290,20 @@ impl<'a> super::InteractiveState<'a> {
 
                 let breadcrumb_hover = self.document.history.is_hovering();
 
-                let now_hovering = content_hover || breadcrumb_hover;
+                let now_hovering = content_hover || breadcrumb_hover || scrollbar_hover;
 
-                // Update cursor only if self changed
-                if self.loading.was_loading || now_hovering != self.ui.is_hovering {
-                    let shape = if now_hovering { "pointer" } else { "default" };
+                // Update cursor only if state changed
+                if self.loading.was_loading || now_hovering != self.ui.is_hovering || scrollbar_drag
+                {
+                    let shape = if scrollbar_drag {
+                        "grabbing"
+                    } else if scrollbar_hover {
+                        "grab"
+                    } else if now_hovering {
+                        "pointer"
+                    } else {
+                        "default"
+                    };
                     set_cursor_shape(terminal.backend_mut(), shape);
                     self.ui.is_hovering = now_hovering;
                     self.loading.was_loading = false;

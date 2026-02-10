@@ -27,7 +27,7 @@ impl<'a> InteractiveState<'a> {
                 } => {
                     // Restore previous state
                     self.document.document = previous_document;
-                    self.viewport.scroll_offset = previous_scroll;
+                    self.set_scroll_offset(previous_scroll);
                 }
                 UiMode::Input(_) => {
                     // Already set to Normal by replace
@@ -156,12 +156,12 @@ impl<'a> InteractiveState<'a> {
 
                 // Scroll down
                 (KeyCode::Char('j'), _) | (KeyCode::Down, _) => {
-                    self.viewport.scroll_offset = self.viewport.scroll_offset.saturating_add(1);
+                    self.set_scroll_offset(self.viewport.scroll_offset.saturating_add(1));
                 }
 
                 // Scroll up
                 (KeyCode::Char('k'), _) | (KeyCode::Up, _) => {
-                    self.viewport.scroll_offset = self.viewport.scroll_offset.saturating_sub(1);
+                    self.set_scroll_offset(self.viewport.scroll_offset.saturating_sub(1));
                 }
 
                 // Page down
@@ -170,8 +170,7 @@ impl<'a> InteractiveState<'a> {
                         return false;
                     };
                     let page_size = size.height / 2;
-                    self.viewport.scroll_offset =
-                        self.viewport.scroll_offset.saturating_add(page_size);
+                    self.set_scroll_offset(self.viewport.scroll_offset.saturating_add(page_size));
                 }
 
                 // Page up
@@ -180,8 +179,7 @@ impl<'a> InteractiveState<'a> {
                         return false;
                     };
                     let page_size = size.height / 2;
-                    self.viewport.scroll_offset =
-                        self.viewport.scroll_offset.saturating_sub(page_size);
+                    self.set_scroll_offset(self.viewport.scroll_offset.saturating_sub(page_size));
                 }
 
                 // Dump logs to disk (undocumented debug feature)
@@ -203,7 +201,7 @@ impl<'a> InteractiveState<'a> {
                         } => {
                             // Exiting dev log - restore previous state
                             self.document.document = previous_document;
-                            self.viewport.scroll_offset = previous_scroll;
+                            self.set_scroll_offset(previous_scroll);
                         }
                         UiMode::Normal => {
                             // Entering dev log - swap in dev log document
@@ -211,7 +209,7 @@ impl<'a> InteractiveState<'a> {
                             let previous_document =
                                 std::mem::replace(&mut self.document.document, dev_log_doc);
                             let previous_scroll = self.viewport.scroll_offset;
-                            self.viewport.scroll_offset = 0;
+                            self.set_scroll_offset(0);
                             self.ui_mode = UiMode::DevLog {
                                 previous_document,
                                 previous_scroll,
@@ -226,12 +224,12 @@ impl<'a> InteractiveState<'a> {
 
                 // Jump to top
                 (KeyCode::Home, _) => {
-                    self.viewport.scroll_offset = 0;
+                    self.set_scroll_offset(0);
                 }
 
-                // Jump to bottom (will clamp in render)
+                // Jump to bottom (will clamp to actual max)
                 (KeyCode::Char('G'), KeyModifiers::SHIFT) | (KeyCode::End, _) => {
-                    self.viewport.scroll_offset = 10000; // Large number, will clamp
+                    self.set_scroll_offset(u16::MAX); // Large number, will clamp to actual max
                 }
 
                 // Enter GoTo mode
