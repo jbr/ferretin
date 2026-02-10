@@ -439,7 +439,7 @@ Helper module for exporting the <inline-code>pattern_type</inline-code> macro</p
 <type-name>path</type-name> </p>
 <truncated level="single-line"><p>
 Cross-platform path manipulation.</p>
-This module provides two types, <inline-code>PathBuf</inline-code> and <inline-code>Path</inline-code> (akin to <inline-code>String</inline-code> and <inline-code>str</inline-code>), for working with paths abstractly. These around <inline-code>OsString</inline-code> and <inline-code>OsStr</inline-code> respectively, meaning that they work directly on strings according to the local platform's <elided chars="1769"/></truncated>
+This module provides two types, <inline-code>PathBuf</inline-code> and <inline-code>Path</inline-code> (akin to <inline-code>String</inline-code> and <inline-code>str</inline-code>), for working with paths abstractly. These around <inline-code>OsString</inline-code> and <inline-code>OsStr</inline-code> respectively, meaning that they work directly on strings according to the local platform's <elided chars="2332"/></truncated>
 </item>
   <item><p>
 <type-name>pin</type-name> </p>

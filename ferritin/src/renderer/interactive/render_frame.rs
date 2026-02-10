@@ -8,11 +8,11 @@ use crate::styled_string::NodePath;
 
 impl<'a> InteractiveState<'a> {
     pub(super) fn render_frame(&mut self, frame: &mut Frame) {
-        // Reserve last 2 lines for status bars
+        // Reserve last 2 lines for status bars and rightmost column for scrollbar
         let main_area = Rect {
             x: frame.area().x,
             y: frame.area().y,
-            width: frame.area().width,
+            width: frame.area().width.saturating_sub(1), // Reserve rightmost column for scrollbar
             height: frame.area().height.saturating_sub(2),
         };
 
@@ -48,13 +48,16 @@ impl<'a> InteractiveState<'a> {
                 }
             }
 
+            // Store viewport height for scroll clamping
+            self.viewport.last_viewport_height = main_area.height;
+
             // Reset layout state for this frame
             self.layout.pos = Position::default();
             self.layout.indent = 0;
             self.layout.node_path = NodePath::new();
             self.layout.area = main_area;
 
-            // Render main document
+            // Render main document (will update cache if needed)
             self.render_document(main_area, frame.buffer_mut());
 
             // Render breadcrumb bar or loading animation
@@ -70,6 +73,11 @@ impl<'a> InteractiveState<'a> {
 
             // Render status bar
             self.render_status_bar(frame.buffer_mut(), status_area);
+
+            // Render scrollbar if we have cached layout information
+            if let Some(layout_cache) = self.viewport.cached_layout {
+                self.render_scrollbar(frame.buffer_mut(), main_area, layout_cache.document_height);
+            }
 
             // Render theme picker overlay if in theme picker mode
             if let UiMode::ThemePicker { selected_index, .. } = self.ui_mode {

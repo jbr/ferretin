@@ -26,7 +26,9 @@ impl<'a> InteractiveState<'a> {
         match response {
             RequestResponse::Document { doc, entry } => {
                 self.document.document = doc;
-                self.viewport.scroll_offset = 0;
+                self.set_scroll_offset(0);
+                // Invalidate layout cache when document changes
+                self.viewport.cached_layout = None;
 
                 // Add to history if we got an entry
                 if let Some(new_entry) = entry {

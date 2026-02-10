@@ -81,6 +81,7 @@ mod render_frame;
 mod render_help_screen;
 mod render_loading_bar;
 mod render_node;
+mod render_scrollbar;
 mod render_span;
 mod render_status_bar;
 mod render_table;
