@@ -29,10 +29,20 @@ impl Display for HistoryEntry<'_> {
         match self {
             HistoryEntry::Item(item) => f.write_str(item.name().unwrap_or("<unnamed>")),
             HistoryEntry::Search { query, crate_name } => {
-                if let Some(crate_name) = crate_name {
-                    f.write_fmt(format_args!("\"{}\" in {}", query, crate_name))
+                if query.is_empty() {
+                    // Empty query - show "Search in crate_name" or just "Search"
+                    if let Some(crate_name) = crate_name {
+                        f.write_fmt(format_args!("Search in {}", crate_name))
+                    } else {
+                        f.write_str("Search")
+                    }
                 } else {
-                    f.write_fmt(format_args!("\"{}\"", query))
+                    // Non-empty query - show quoted query
+                    if let Some(crate_name) = crate_name {
+                        f.write_fmt(format_args!("\"{}\" in {}", query, crate_name))
+                    } else {
+                        f.write_fmt(format_args!("\"{}\"", query))
+                    }
                 }
             }
             HistoryEntry::List => f.write_str("List"),

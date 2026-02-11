@@ -4,7 +4,6 @@ use crate::request::Request;
 use crate::state::RustdocTools;
 use crate::traits::WriteFmt;
 use anyhow::Result;
-use ferritin_common::search::indexer::{BM25Scorer, SearchIndex};
 use mcplease::traits::{Tool, WithExamples};
 use mcplease::types::Example;
 use serde::{Deserialize, Serialize};
@@ -53,8 +52,12 @@ impl Tool<RustdocTools> for Search {
         let manifest_path = state.resolve_path("Cargo.toml", None)?;
 
         let request = Request::new(manifest_path);
-        let index = match SearchIndex::load_or_build(&request, &self.crate_name) {
-            Ok(index) => index,
+
+        // Perform search using Navigator's built-in search
+        let limit = self.limit.unwrap_or(10);
+        let crate_names = [self.crate_name.as_str()];
+        let results = match request.search(&self.query, &crate_names) {
+            Ok(results) => results,
             Err(mut suggestions) => {
                 let mut result = format!(
                     "`{}` not found. Did you mean one of these?\n\n",
@@ -74,29 +77,21 @@ impl Tool<RustdocTools> for Search {
             }
         };
 
-        // Perform search with BM25 scoring
-        let limit = self.limit.unwrap_or(10);
-        let search_results = index.search(&self.query);
-        let mut scorer = BM25Scorer::new();
-        scorer.add(&self.crate_name, search_results);
-        let results = scorer.score();
-
         // Format results
         let mut output = String::new();
         output.write_fmt(format_args!(
             "Search results for '{}' in crate '{}':\n\n",
-            self.query,
-            index.crate_name()
+            self.query, self.crate_name
         ));
 
         if results.is_empty() {
             output.push_str("No results found.\n");
         } else {
+            let top_score = results.first().map(|r| r.score).unwrap_or(1.0).max(1.0);
             let total_score: f32 = results.iter().map(|r| r.score).sum();
             let mut cumulative_score = 0.0;
             let min_results = 1;
 
-            let top_score = results.first().map(|r| r.score).unwrap_or(0.0);
             let mut prev_score = top_score;
 
             for (i, result) in results.into_iter().take(limit).enumerate() {
@@ -114,7 +109,7 @@ impl Tool<RustdocTools> for Search {
                     cumulative_score += result.score;
                     prev_score = result.score;
                     let path = path.join("::");
-                    let normalized_score = 100.0 * result.score / total_score;
+                    let normalized_score = 100.0 * result.score / top_score;
                     output.write_fmt(format_args!(
                         "• {path} ({:?}) - score: {normalized_score:.0}\n",
                         item.kind()

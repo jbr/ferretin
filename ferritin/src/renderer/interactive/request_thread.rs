@@ -47,27 +47,23 @@ pub(super) fn request_thread_loop<'a>(
                 crate_name,
                 limit,
             } => {
-                let (search_doc, is_error) = search::execute(
+                let (search_doc, _is_error) = search::execute(
                     request,
                     query.as_ref(),
                     limit,
                     crate_name.as_ref().map(|c| c.as_ref()),
                 );
 
-                if is_error {
-                    let _ =
-                        resp_tx.send(RequestResponse::Error(format!("No results for: {}", query)));
-                } else {
-                    let entry = HistoryEntry::Search {
-                        query: query.into_owned(),
-                        crate_name: crate_name.map(|c| c.into_owned()),
-                    };
+                // Always create history entry for searches
+                let entry = HistoryEntry::Search {
+                    query: query.into_owned(),
+                    crate_name: crate_name.map(|c| c.into_owned()),
+                };
 
-                    let _ = resp_tx.send(RequestResponse::Document {
-                        doc: search_doc,
-                        entry: Some(entry),
-                    });
-                }
+                let _ = resp_tx.send(RequestResponse::Document {
+                    doc: search_doc,
+                    entry: Some(entry),
+                });
             }
 
             UiCommand::List => {

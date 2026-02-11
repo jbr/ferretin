@@ -100,7 +100,7 @@ The cache uses cargo's home directory (typically `~/.cargo` on Unix systems).
 
 ## Current Status
 
-Ferritin is at version 0.1 and actively used by the author as a primary documentation interface. It's ready for general use, though the output format should be considered unstable and may change between versions.
+Ferritin is at version 0.x and actively used by the author as a primary documentation interface. It's ready for general use, though the output format should be considered unstable and may change between versions.
 
 **If you're scripting against ferritin's output**, be aware that the text format may change. Pin to a specific version or be prepared to update your scripts.
 
