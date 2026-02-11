@@ -28,7 +28,9 @@ impl<'a> InteractiveState<'a> {
             UiMode::Input(InputMode::GoTo { buffer }) => {
                 (format!("Go to: {}", buffer).into(), None)
             }
-            UiMode::Input(InputMode::Search { buffer, all_crates }) => {
+            UiMode::Input(InputMode::Search {
+                buffer, all_crates, ..
+            }) => {
                 let scope = if *all_crates {
                     "all crates".to_string()
                 } else {

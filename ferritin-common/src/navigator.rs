@@ -3,6 +3,7 @@
 use crate::CrateName;
 use crate::DocRef;
 use crate::RustdocData;
+use crate::search::SearchIndex;
 use crate::sources::{CrateProvenance, DocsRsSource, LocalSource, Source, StdSource};
 use crate::string_utils::case_aware_jaro_winkler;
 use elsa::sync::FrozenMap;
@@ -92,8 +93,13 @@ pub struct Navigator {
     /// A None value indicates permanent failure.
     working_set: FrozenMap<CrateName<'static>, Box<Option<RustdocData>>>,
 
-    // Map from internal name (underscores) to real name/version from external_crates
+    /// Map from internal name (underscores) to real name/version from external_crates
     external_crate_names: FrozenMap<CrateName<'static>, Box<ExternalCrateInfo>>,
+
+    /// Cached search indexes, built lazily on first search.
+    ///
+    /// A None value indicates permanent failure to build index.
+    pub(crate) search_indexes: FrozenMap<CrateName<'static>, Box<Option<SearchIndex>>>,
 }
 
 impl Debug for Navigator {
