@@ -192,7 +192,7 @@ impl LocalSource {
                 });
             } else if !tried_rebuilding && self.can_rebuild {
                 tried_rebuilding = true;
-                if self.rebuild_docs(&crate_name).is_ok() {
+                if self.rebuild_docs(&crate_name, None).is_ok() {
                     continue;
                 }
             }
@@ -243,7 +243,7 @@ impl LocalSource {
                 });
             } else if !tried_rebuilding && self.can_rebuild {
                 tried_rebuilding = true;
-                if self.rebuild_docs(&crate_name).is_ok() {
+                if self.rebuild_docs(&crate_name, version).is_ok() {
                     continue;
                 }
             }
@@ -252,7 +252,12 @@ impl LocalSource {
     }
 
     /// Rebuild documentation for a crate
-    fn rebuild_docs(&self, crate_name: &CrateName<'_>) -> Result<()> {
+    fn rebuild_docs(&self, crate_name: &CrateName<'_>, version: Option<&Version>) -> Result<()> {
+        let package_spec = match version {
+            Some(v) => format!("{}@{}", crate_name, v),
+            None => crate_name.to_string(),
+        };
+
         let output = Command::new("rustup")
             .arg("run")
             .args([
@@ -261,7 +266,7 @@ impl LocalSource {
                 "doc",
                 "--no-deps",
                 "--package",
-                crate_name,
+                &package_spec,
             ])
             .env("RUSTDOCFLAGS", "-Z unstable-options --output-format=json")
             .current_dir(self.project_root())
