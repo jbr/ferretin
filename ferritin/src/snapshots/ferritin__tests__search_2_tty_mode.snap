@@ -5,32 +5,35 @@ expression: "render_for_tests(Commands::search(\"generic struct\"), OutputMode :
 Search results for 'generic struct'
 ================================================================================
 
-  ◦ [test-crate::GenericStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.GenericStruct.html)  (Struct) - score: 100
+  ◦ [test-crate::GenericStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.GenericStruct.html)  (Struct) - score: 100.0 (relevance: 100.0,
+    authority: 0.0)
     A generic struct for testing multi-paragraph documentation. [...]
 
-  ◦ [core::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 87
+  ◦ [alloc::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 92.8 (relevance: 87.0, authority:
+    6.7)
     A trait for borrowing data. [...]
 
-  ◦ [std::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 87
+  ◦ [core::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 87.2 (relevance: 87.0, authority:
+    0.2)
     A trait for borrowing data. [...]
 
-  ◦ [alloc::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 87
+  ◦ [std::borrow::Borrow](http://docs.rust-lang.org/nightly/core/borrow/trait.Borrow.html)  (Trait) - score: 87.2 (relevance: 87.0, authority: 0.2)
     A trait for borrowing data. [...]
 
-  ◦ [core::clone::Clone](http://docs.rust-lang.org/nightly/core/clone/trait.Clone.html)  (Trait) - score: 83
+  ◦ [core::clone::Clone](http://docs.rust-lang.org/nightly/core/clone/trait.Clone.html)  (Trait) - score: 84.0 (relevance: 83.2, authority: 1.0)
     A common trait that allows explicit creation of a duplicate value. [...]
 
-  ◦ [std::clone::Clone](http://docs.rust-lang.org/nightly/core/clone/trait.Clone.html)  (Trait) - score: 83
+  ◦ [std::clone::Clone](http://docs.rust-lang.org/nightly/core/clone/trait.Clone.html)  (Trait) - score: 84.0 (relevance: 83.2, authority: 1.0)
     A common trait that allows explicit creation of a duplicate value. [...]
 
-  ◦ [core::hash](http://docs.rust-lang.org/nightly/core/hash/index.html)  (Module) - score: 80
-    Generic hashing support. [...]
-
-  ◦ [std::hash](http://docs.rust-lang.org/nightly/std/hash/index.html)  (Module) - score: 80
-    Generic hashing support. [...]
-
-  ◦ [core::ops::Deref](http://docs.rust-lang.org/nightly/core/ops/deref/trait.Deref.html)  (Trait) - score: 80
+  ◦ [core::ops::Deref](http://docs.rust-lang.org/nightly/core/ops/deref/trait.Deref.html)  (Trait) - score: 80.8 (relevance: 80.0, authority: 1.0)
     Used for immutable dereferencing operations, like *v. [...]
 
-  ◦ [std::ops::Deref](http://docs.rust-lang.org/nightly/core/ops/deref/trait.Deref.html)  (Trait) - score: 80
+  ◦ [std::ops::Deref](http://docs.rust-lang.org/nightly/core/ops/deref/trait.Deref.html)  (Trait) - score: 80.8 (relevance: 80.0, authority: 1.0)
     Used for immutable dereferencing operations, like *v. [...]
+
+  ◦ [core::hash](http://docs.rust-lang.org/nightly/core/hash/index.html)  (Module) - score: 80.0 (relevance: 80.0, authority: 0.0)
+    Generic hashing support. [...]
+
+  ◦ [std::hash](http://docs.rust-lang.org/nightly/std/hash/index.html)  (Module) - score: 80.0 (relevance: 80.0, authority: 0.0)
+    Generic hashing support. [...]
