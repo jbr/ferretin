@@ -5,8 +5,8 @@ expression: "render_for_tests(Commands::get(\"crate::submodule::TestEnum\"), Out
 Item: TestEnum
 Kind: Enum
 Visibility: Public
-Defined at: test_crate::submodule::TestEnum
-In crate: test-crate (0.1.0)
+Defined at: fixture_crate::submodule::TestEnum
+In crate: fixture-crate (0.1.0)
 
 An enum for testing
 

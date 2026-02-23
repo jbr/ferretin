@@ -2,48 +2,57 @@
 source: ferritin/src/tests.rs
 expression: "render_for_tests(Commands::get(\"crate\").recursive(), OutputMode :: Tty)"
 ---
-Item: test_crate
+Item: fixture_crate
 Kind: Module
 Visibility: Public
-Defined at: [test_crate](https://docs.rs/test-crate/0.1.0/test-crate/index.html)
-In crate: test-crate (0.1.0)
+Defined at: [fixture_crate](https://docs.rs/fixture-crate/0.1.0/fixture-crate/index.html)
+In crate: fixture-crate (0.1.0)
 
 A minimal test crate for rustdoc JSON testing
 
 Modules
 
-  ◦ [link_resolution_tests](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/index.html) 
+  ◦ [link_resolution_tests](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/index.html) 
     Module for testing intra-doc link resolution
 
-  ◦ [link_resolution_tests::nested](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/nested/index.html) 
+  ◦ [link_resolution_tests::nested](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/nested/index.html) 
     Nested module for testing scoped resolution
 
-  ◦ [link_resolution_tests::nested::deeply_nested](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/nested/deeply_nested/index.html) 
+  ◦ [link_resolution_tests::nested::deeply_nested](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/nested/deeply_nested/index.html) 
     Another nested module
 
-  ◦ [markdown_test](https://docs.rs/test-crate/0.1.0/test-crate/markdown_test/index.html) 
+  ◦ [markdown_test](https://docs.rs/fixture-crate/0.1.0/fixture-crate/markdown_test/index.html) 
     Markdown: Syntax [...]
 
-  ◦ [reexport_mod](https://docs.rs/test-crate/0.1.0/test-crate/reexport_mod/index.html) 
+  ◦ [namespace_collisions](https://docs.rs/fixture-crate/0.1.0/fixture-crate/namespace_collisions/index.html) 
+    Module for testing namespace disambiguation with kind discriminators. [...]
 
-  ◦ [submodule](https://docs.rs/test-crate/0.1.0/test-crate/submodule/index.html) 
+  ◦ [namespace_collisions::both](https://docs.rs/fixture-crate/0.1.0/fixture-crate/namespace_collisions/both/index.html) 
+    A module sharing its name with [both()](https://docs.rs/fixture-crate/0.1.0/fixture-crate/namespace_collisions/fn.both.html) below.
+
+  ◦ [reexport_mod](https://docs.rs/fixture-crate/0.1.0/fixture-crate/reexport_mod/index.html) 
+
+  ◦ [submodule](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/index.html) 
     A module with items
 
 Structs
 
-  ◦ [GenericStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.GenericStruct.html) 
+  ◦ [GenericStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.GenericStruct.html) 
     A generic struct for testing multi-paragraph documentation. [...]
 
-  ◦ [SubStruct](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html) 
+  ◦ [ReachableViaPrivateModule](https://docs.rs/fixture-crate/0.1.0/fixture-crate/private_detail/struct.ReachableViaPrivateModule.html) 
+    A struct accessible only via re-export from a private module.
+
+  ◦ [SubStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html) 
     A struct in a submodule
 
-  ◦ [TestStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html) 
+  ◦ [TestStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html) 
     A simple struct for testing basic functionality. [...]
 
-  ◦ [TupleStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.TupleStruct.html) 
+  ◦ [TupleStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TupleStruct.html) 
     A tuple struct for testing
 
-  ◦ [UnitStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.UnitStruct.html) 
+  ◦ [UnitStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.UnitStruct.html) 
     A unit struct for testing
 
   ◦ [Vec](http://docs.rust-lang.org/nightly/alloc/vec/struct.Vec.html) 
@@ -52,76 +61,82 @@ Structs
   ◦ [link_resolution_tests::HashSet](http://docs.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html) 
     A [hash set](https://doc.rust-lang.org/nightly/std/index.html?search=std%3A%3Acollections) implemented as a HashMap where the value is (). [...]
 
-  ◦ [link_resolution_tests::LinkTestStruct](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/struct.LinkTestStruct.html) 
+  ◦ [link_resolution_tests::LinkTestStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/struct.LinkTestStruct.html) 
     Struct in link test module
 
-  ◦ [link_resolution_tests::RenamedTestStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.RenamedTestStruct.html) 
+  ◦ [link_resolution_tests::RenamedTestStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.RenamedTestStruct.html) 
     A simple struct for testing basic functionality. [...]
 
-  ◦ [link_resolution_tests::SubStruct](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html) 
+  ◦ [link_resolution_tests::SubStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html) 
     A struct in a submodule
 
   ◦ [link_resolution_tests::Tree](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.Tree.html) 
     An ordered map based on a [B-Tree](https://en.wikipedia.org/wiki/B-tree). [...]
 
-  ◦ [link_resolution_tests::nested::NestedStruct](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/nested/struct.NestedStruct.html) 
+  ◦ [link_resolution_tests::nested::NestedStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/nested/struct.NestedStruct.html) 
     Struct in nested module
 
   ◦ [link_resolution_tests::nested::Str](http://docs.rust-lang.org/nightly/alloc/string/struct.Str.html) 
     A UTF-8–encoded, growable string. [...]
 
-  ◦ [link_resolution_tests::nested::deeply_nested::DeepStruct](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/nested/deeply_nested/struct.DeepStruct.html) 
+  ◦ [link_resolution_tests::nested::deeply_nested::DeepStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/nested/deeply_nested/struct.DeepStruct.html) 
     Struct in deeply nested module
 
-  ◦ [reexport_mod::SubStruct](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html) 
+  ◦ [namespace_collisions::both::Inside](https://docs.rs/fixture-crate/0.1.0/fixture-crate/namespace_collisions/both/struct.Inside.html) 
+    An item inside the colliding module.
+
+  ◦ [reexport_mod::SubStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html) 
     A struct in a submodule
 
-  ◦ [submodule::SubStruct](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html) 
+  ◦ [submodule::SubStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html) 
     A struct in a submodule
 
 Enums
 
-  ◦ [GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html) 
+  ◦ [GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html) 
     A generic enum for testing [...]
 
-  ◦ [TestEnum](https://docs.rs/test-crate/0.1.0/test-crate/submodule/enum.TestEnum.html) 
+  ◦ [TestEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/enum.TestEnum.html) 
     An enum for testing [...]
 
-  ◦ [reexport_mod::TestEnum](https://docs.rs/test-crate/0.1.0/test-crate/submodule/enum.TestEnum.html) 
+  ◦ [reexport_mod::TestEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/enum.TestEnum.html) 
     An enum for testing [...]
 
-  ◦ [submodule::TestEnum](https://docs.rs/test-crate/0.1.0/test-crate/submodule/enum.TestEnum.html) 
+  ◦ [submodule::TestEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/enum.TestEnum.html) 
     An enum for testing [...]
 
 Traits
 
-  ◦ [ComplexTrait](https://docs.rs/test-crate/0.1.0/test-crate/trait.ComplexTrait.html) 
+  ◦ [ComplexTrait](https://docs.rs/fixture-crate/0.1.0/fixture-crate/trait.ComplexTrait.html) 
     A more complex trait demonstrating various features
 
-  ◦ [TestTrait](https://docs.rs/test-crate/0.1.0/test-crate/trait.TestTrait.html) 
+  ◦ [TestTrait](https://docs.rs/fixture-crate/0.1.0/fixture-crate/trait.TestTrait.html) 
     A trait for testing extremely long documentation that exceeds line limits. [...]
 
-  ◦ [link_resolution_tests::nested::TestTrait](https://docs.rs/test-crate/0.1.0/test-crate/trait.TestTrait.html) 
+  ◦ [link_resolution_tests::nested::TestTrait](https://docs.rs/fixture-crate/0.1.0/fixture-crate/trait.TestTrait.html) 
     A trait for testing extremely long documentation that exceeds line limits. [...]
 
 Functions
 
-  ◦ [SubStruct::double](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.double) 
+  ◦ [ReachableViaPrivateModule::private_module_method](https://docs.rs/fixture-crate/0.1.0/fixture-crate/private_detail/struct.ReachableViaPrivateModule.html#method.private_module_method) 
+    A method on a struct whose module is private. [...]
+
+  ◦ [SubStruct::double](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.double) 
     Double the value
 
-  ◦ [SubStruct::get_value](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.get_value) 
+  ◦ [SubStruct::get_value](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.get_value) 
     Get the value
 
-  ◦ [SubStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.new) 
+  ◦ [SubStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.new) 
     Create a new SubStruct
 
-  ◦ [TestStruct::get_field](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.get_field) 
+  ◦ [TestStruct::get_field](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.get_field) 
     Get the field value
 
-  ◦ [TestStruct::increment_count](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.increment_count) 
+  ◦ [TestStruct::increment_count](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.increment_count) 
     Update the count
 
-  ◦ [TestStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.new) 
+  ◦ [TestStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.new) 
     Create a new TestStruct
 
   ◦ [Vec::allocator](http://docs.rust-lang.org/nightly/alloc/vec/struct.Vec.html#method.allocator) 
@@ -380,10 +395,10 @@ Functions
     Constructs a new, empty Vec<T, A> with at least the specified capacity with the
     provided allocator. [...]
 
-  ◦ [async_function](https://docs.rs/test-crate/0.1.0/test-crate/fn.async_function.html) 
+  ◦ [async_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/fn.async_function.html) 
     An async function
 
-  ◦ [generic_function](https://docs.rs/test-crate/0.1.0/test-crate/fn.generic_function.html) 
+  ◦ [generic_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/fn.generic_function.html) 
     A generic function
 
   ◦ [link_resolution_tests::HashSet::capacity](http://docs.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html#method.capacity) 
@@ -526,28 +541,28 @@ Functions
     Creates a new empty hash set which will use the given hasher to hash keys and
     will allocate memory using the provided allocator. [...]
 
-  ◦ [link_resolution_tests::LinkTestStruct::get_data](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/struct.LinkTestStruct.html#method.get_data) 
+  ◦ [link_resolution_tests::LinkTestStruct::get_data](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/struct.LinkTestStruct.html#method.get_data) 
     Another method
 
-  ◦ [link_resolution_tests::LinkTestStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/struct.LinkTestStruct.html#method.new) 
+  ◦ [link_resolution_tests::LinkTestStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/struct.LinkTestStruct.html#method.new) 
     Method for testing Self resolution
 
-  ◦ [link_resolution_tests::RenamedTestStruct::get_field](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.get_field) 
+  ◦ [link_resolution_tests::RenamedTestStruct::get_field](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.get_field) 
     Get the field value
 
-  ◦ [link_resolution_tests::RenamedTestStruct::increment_count](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.increment_count) 
+  ◦ [link_resolution_tests::RenamedTestStruct::increment_count](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.increment_count) 
     Update the count
 
-  ◦ [link_resolution_tests::RenamedTestStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#method.new) 
+  ◦ [link_resolution_tests::RenamedTestStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#method.new) 
     Create a new TestStruct
 
-  ◦ [link_resolution_tests::SubStruct::double](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.double) 
+  ◦ [link_resolution_tests::SubStruct::double](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.double) 
     Double the value
 
-  ◦ [link_resolution_tests::SubStruct::get_value](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.get_value) 
+  ◦ [link_resolution_tests::SubStruct::get_value](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.get_value) 
     Get the value
 
-  ◦ [link_resolution_tests::SubStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.new) 
+  ◦ [link_resolution_tests::SubStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.new) 
     Create a new SubStruct
 
   ◦ [link_resolution_tests::Tree::append](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.BTreeMap.html#method.append) 
@@ -627,6 +642,9 @@ Functions
     Returns a [CursorMut](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.CursorMut.html) pointing at the gap before the smallest key greater than
     the given bound. [...]
 
+  ◦ [link_resolution_tests::Tree::merge](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.BTreeMap.html#method.merge) 
+    Moves all elements from other into self, leaving other empty. [...]
+
   ◦ [link_resolution_tests::Tree::new](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.BTreeMap.html#method.new) 
     Makes a new, empty BTreeMap. [...]
 
@@ -689,7 +707,7 @@ Functions
   ◦ [link_resolution_tests::Tree::values_mut](http://docs.rust-lang.org/nightly/alloc/collections/btree/map/struct.BTreeMap.html#method.values_mut) 
     Gets a mutable iterator over the values of the map, in order by key. [...]
 
-  ◦ [link_resolution_tests::nested::NestedStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/link_resolution_tests/nested/struct.NestedStruct.html#method.new) 
+  ◦ [link_resolution_tests::nested::NestedStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/link_resolution_tests/nested/struct.NestedStruct.html#method.new) 
     Create new NestedStruct
 
   ◦ [link_resolution_tests::nested::Str::as_bytes](http://docs.rust-lang.org/nightly/alloc/string/struct.String.html#method.as_bytes) 
@@ -864,115 +882,118 @@ Functions
   ◦ [link_resolution_tests::nested::Str::with_capacity](http://docs.rust-lang.org/nightly/alloc/string/struct.String.html#method.with_capacity) 
     Creates a new empty String with at least the specified capacity. [...]
 
-  ◦ [reexport_mod::SubStruct::double](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.double) 
+  ◦ [namespace_collisions::both](https://docs.rs/fixture-crate/0.1.0/fixture-crate/namespace_collisions/fn.both.html) 
+    A function sharing its name with the [both](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3Aboth) module above.
+
+  ◦ [reexport_mod::SubStruct::double](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.double) 
     Double the value
 
-  ◦ [reexport_mod::SubStruct::get_value](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.get_value) 
+  ◦ [reexport_mod::SubStruct::get_value](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.get_value) 
     Get the value
 
-  ◦ [reexport_mod::SubStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.new) 
+  ◦ [reexport_mod::SubStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.new) 
     Create a new SubStruct
 
-  ◦ [reexport_mod::sub_function](https://docs.rs/test-crate/0.1.0/test-crate/submodule/fn.sub_function.html) 
+  ◦ [reexport_mod::sub_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/fn.sub_function.html) 
     A function in a submodule
 
-  ◦ [sub_function](https://docs.rs/test-crate/0.1.0/test-crate/submodule/fn.sub_function.html) 
+  ◦ [sub_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/fn.sub_function.html) 
     A function in a submodule
 
-  ◦ [submodule::SubStruct::double](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.double) 
+  ◦ [submodule::SubStruct::double](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.double) 
     Double the value
 
-  ◦ [submodule::SubStruct::get_value](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.get_value) 
+  ◦ [submodule::SubStruct::get_value](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.get_value) 
     Get the value
 
-  ◦ [submodule::SubStruct::new](https://docs.rs/test-crate/0.1.0/test-crate/submodule/struct.SubStruct.html#method.new) 
+  ◦ [submodule::SubStruct::new](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/struct.SubStruct.html#method.new) 
     Create a new SubStruct
 
-  ◦ [submodule::sub_function](https://docs.rs/test-crate/0.1.0/test-crate/submodule/fn.sub_function.html) 
+  ◦ [submodule::sub_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/fn.sub_function.html) 
     A function in a submodule
 
-  ◦ [test_function](https://docs.rs/test-crate/0.1.0/test-crate/fn.test_function.html) 
+  ◦ [test_function](https://docs.rs/fixture-crate/0.1.0/fixture-crate/fn.test_function.html) 
     A public function
 
 Constants
 
-  ◦ [TEST_CONSTANT](https://docs.rs/test-crate/0.1.0/test-crate/constant.TEST_CONSTANT.html) 
+  ◦ [TEST_CONSTANT](https://docs.rs/fixture-crate/0.1.0/fixture-crate/constant.TEST_CONSTANT.html) 
     A const for testing
 
 Statics
 
-  ◦ [TEST_STATIC](https://docs.rs/test-crate/0.1.0/test-crate/static.TEST_STATIC.html) 
+  ◦ [TEST_STATIC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/static.TEST_STATIC.html) 
     A static for testing
 
 Variants
 
-  ◦ [GenericEnum::Mixed](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [GenericEnum::Mixed](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant with mixed generics
 
-  ◦ [GenericEnum::Simple](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [GenericEnum::Simple](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Simple variant
 
-  ◦ [GenericEnum::WithData](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [GenericEnum::WithData](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant with generic data
 
-  ◦ [TestEnum::VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [TestEnum::VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [TestEnum::VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [TestEnum::VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [TestEnum::VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [TestEnum::VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
-  ◦ [VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
-  ◦ [reexport_mod::TestEnum::VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [reexport_mod::TestEnum::VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [reexport_mod::TestEnum::VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [reexport_mod::TestEnum::VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [reexport_mod::TestEnum::VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [reexport_mod::TestEnum::VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
-  ◦ [reexport_mod::VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [reexport_mod::VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [reexport_mod::VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [reexport_mod::VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [reexport_mod::VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [reexport_mod::VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
-  ◦ [submodule::TestEnum::VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [submodule::TestEnum::VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [submodule::TestEnum::VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [submodule::TestEnum::VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [submodule::TestEnum::VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [submodule::TestEnum::VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
-  ◦ [submodule::VariantA](https://docs.rs/test-crate/0.1.0/test-crate/) 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+  ◦ [submodule::VariantA](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
-  ◦ [submodule::VariantB](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [submodule::VariantB](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant B with data
 
-  ◦ [submodule::VariantC](https://docs.rs/test-crate/0.1.0/test-crate/) 
+  ◦ [submodule::VariantC](https://docs.rs/fixture-crate/0.1.0/fixture-crate/) 
     Variant C with struct data (name and value)
 
 AssocConst
 
-  ◦ [TestStruct::ASSOCIATED_CONST](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#associatedconstant.ASSOCIATED_CONST) 
+  ◦ [TestStruct::ASSOCIATED_CONST](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#associatedconstant.ASSOCIATED_CONST) 
     This is an associated constant for a struct
 
-  ◦ [link_resolution_tests::RenamedTestStruct::ASSOCIATED_CONST](https://docs.rs/test-crate/0.1.0/test-crate/struct.TestStruct.html#associatedconstant.ASSOCIATED_CONST) 
+  ◦ [link_resolution_tests::RenamedTestStruct::ASSOCIATED_CONST](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.TestStruct.html#associatedconstant.ASSOCIATED_CONST) 
     This is an associated constant for a struct

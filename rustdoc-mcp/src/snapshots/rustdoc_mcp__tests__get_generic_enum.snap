@@ -5,7 +5,7 @@ expression: result
 Item: GenericEnum
 Kind: Enum
 Visibility: Public
-Defined at: test_crate::GenericEnum
+Defined at: fixture_crate::GenericEnum
 
 A generic enum for testing
 

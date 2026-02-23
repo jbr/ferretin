@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "test-crate"
+name = "fixture-crate"
 version = "0.1.0"

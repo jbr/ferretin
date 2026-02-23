@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = ["ferritin-common", "rustdoc-mcp", "ferritin"]
-exclude = ["rustdoc-mcp/tests/test-crate", "rustdoc-mcp/tests/test-workspace"]
+exclude = ["rustdoc-mcp/tests/fixture-crate", "rustdoc-mcp/tests/test-workspace"]
 
 [workspace.package]
 edition = "2024"

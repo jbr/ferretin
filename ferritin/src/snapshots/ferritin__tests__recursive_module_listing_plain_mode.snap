@@ -2,11 +2,11 @@
 source: ferritin/src/tests.rs
 expression: "render_for_tests(Commands::get(\"crate\").recursive(), OutputMode :: Plain)"
 ---
-Item: test_crate
+Item: fixture_crate
 Kind: Module
 Visibility: Public
-Defined at: test_crate
-In crate: test-crate (0.1.0)
+Defined at: fixture_crate
+In crate: fixture-crate (0.1.0)
 
 A minimal test crate for rustdoc JSON testing
 
@@ -24,6 +24,12 @@ Modules
   ◦ markdown_test 
     Markdown: Syntax [...]
 
+  ◦ namespace_collisions 
+    Module for testing namespace disambiguation with kind discriminators. [...]
+
+  ◦ namespace_collisions::both 
+    A module sharing its name with both() below.
+
   ◦ reexport_mod 
 
   ◦ submodule 
@@ -33,6 +39,9 @@ Structs
 
   ◦ GenericStruct 
     A generic struct for testing multi-paragraph documentation. [...]
+
+  ◦ ReachableViaPrivateModule 
+    A struct accessible only via re-export from a private module.
 
   ◦ SubStruct 
     A struct in a submodule
@@ -73,6 +82,9 @@ Structs
   ◦ link_resolution_tests::nested::deeply_nested::DeepStruct 
     Struct in deeply nested module
 
+  ◦ namespace_collisions::both::Inside 
+    An item inside the colliding module.
+
   ◦ reexport_mod::SubStruct 
     A struct in a submodule
 
@@ -105,6 +117,9 @@ Traits
     A trait for testing extremely long documentation that exceeds line limits. [...]
 
 Functions
+
+  ◦ ReachableViaPrivateModule::private_module_method 
+    A method on a struct whose module is private. [...]
 
   ◦ SubStruct::double 
     Double the value
@@ -535,6 +550,9 @@ Functions
   ◦ link_resolution_tests::Tree::lower_bound_mut 
     Returns a CursorMut pointing at the gap before the smallest key greater than the given bound. [...]
 
+  ◦ link_resolution_tests::Tree::merge 
+    Moves all elements from other into self, leaving other empty. [...]
+
   ◦ link_resolution_tests::Tree::new 
     Makes a new, empty BTreeMap. [...]
 
@@ -726,6 +744,9 @@ Functions
 
   ◦ link_resolution_tests::nested::Str::with_capacity 
     Creates a new empty String with at least the specified capacity. [...]
+
+  ◦ namespace_collisions::both 
+    A function sharing its name with the both module above.
 
   ◦ reexport_mod::SubStruct::double 
     Double the value

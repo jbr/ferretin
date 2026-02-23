@@ -1,8 +1,34 @@
-use crate::{Navigator, RustdocData, navigator::parse_docsrs_url};
+use crate::{
+    Navigator, RustdocData, navigator::parse_docsrs_url, rustdoc_data::kind_discriminator,
+};
 use fieldwork::Fieldwork;
 use rustdoc_types::{
     ExternalCrate, Id, Item, ItemEnum, ItemKind, ItemSummary, MacroKind, ProcMacro, Use,
 };
+
+/// A lightweight, `Copy` reference to a parent item set during tree traversal.
+///
+/// Stored on [`DocRef`] to enable [`DocRef::discriminated_path`] for items absent from
+/// rustdoc's `paths` map (e.g. inherent methods; rust-lang/rust#152511). One level is
+/// sufficient because only impl-block items are orphaned, and their parents (structs,
+/// enums, traits) always have an `ItemSummary`.
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct ParentRef<'a> {
+    pub(crate) crate_docs: &'a RustdocData,
+    pub(crate) item: &'a Item,
+    /// The name override from the parent's [`DocRef`], if it was set (e.g. by a re-export).
+    pub(crate) name: Option<&'a str>,
+}
+
+impl<'a> From<DocRef<'a, Item>> for ParentRef<'a> {
+    fn from(d: DocRef<'a, Item>) -> Self {
+        ParentRef {
+            crate_docs: d.crate_docs,
+            item: d.item,
+            name: d.name,
+        }
+    }
+}
 use semver::VersionReq;
 use std::{
     fmt::{self, Debug, Display, Formatter},
@@ -19,6 +45,11 @@ pub struct DocRef<'a, T> {
 
     #[field(get = false, with, set)]
     name: Option<&'a str>,
+
+    /// Parent item set during tree traversal; used by [`DocRef::discriminated_path`] as a
+    /// fallback for items absent from rustdoc's `paths` map (rust-lang/rust#152511).
+    #[field(get = false, with(vis = "pub(crate)", option_set_some, into))]
+    parent: Option<ParentRef<'a>>,
 }
 
 // Equality based on item pointer and crate provenance
@@ -109,6 +140,74 @@ impl<'a> DocRef<'a, Item> {
         None
     }
 
+    /// Returns the fully-qualified, kind-discriminated path for this item, suitable for
+    /// round-tripping through `Navigator::resolve_path`.
+    ///
+    /// For example, a `Vec` struct in `std::vec` returns `"std::vec::struct@Vec"`, and the
+    /// `vec` module itself returns `"std::mod@vec"`. The crate name is included as the first
+    /// segment; the discriminator (`kind@`) appears only on the final segment.
+    ///
+    /// Uses `crate_docs().name()` (the Navigator's canonical crate name) rather than
+    /// `ItemSummary::path[0]` (which rustdoc normalizes to underscores) so that the
+    /// generated path round-trips correctly through `Navigator::resolve_path`.
+    ///
+    /// Returns `None` if the item has no `ItemSummary` entry in the crate's paths map.
+    pub fn discriminated_path(&self) -> Option<String> {
+        if let Some(summary) = self.summary() {
+            // Fast path: use the ItemSummary path directly.
+            // path[0] is the crate name as rustdoc sees it (underscored); use the Navigator's
+            // canonical name instead so the result can be fed back into resolve_path.
+            let path = &summary.path;
+            let tail = path.get(1..)?;
+            let disc = kind_discriminator(self.kind());
+            let crate_name = self.crate_docs().name();
+            return match tail {
+                [] => Some(format!("{crate_name}::{disc}@{}", path[0])),
+                [.., last] => {
+                    let prefix = tail[..tail.len() - 1].join("::");
+                    if prefix.is_empty() {
+                        Some(format!("{crate_name}::{disc}@{last}"))
+                    } else {
+                        Some(format!("{crate_name}::{prefix}::{disc}@{last}"))
+                    }
+                }
+            };
+        }
+
+        // Fallback for items absent from rustdoc's paths map (e.g. inherent methods;
+        // rust-lang/rust#152511). Requires a parent set during tree traversal.
+        let parent_ref = self.parent?;
+        let disc = kind_discriminator(self.kind());
+        let name = self.item.name.as_deref()?;
+
+        // Prefer a path without a discriminator on the parent segment (simpler output).
+        // The unqualified key is only present in path_to_id when there is no collision at
+        // that path, so its presence is a reliable signal that we can omit the discriminator.
+        if let Some(parent_summary) = parent_ref.crate_docs.paths.get(&parent_ref.item.id) {
+            if let Some(tail) = parent_summary.path.get(1..) {
+                let parent_key = tail.join("::");
+                if parent_ref.crate_docs.path_to_id.contains_key(&parent_key) {
+                    let crate_name = parent_ref.crate_docs.name();
+                    let parent_path = if parent_key.is_empty() {
+                        crate_name.to_string()
+                    } else {
+                        format!("{crate_name}::{parent_key}")
+                    };
+                    return Some(format!("{parent_path}::{disc}@{name}"));
+                }
+            }
+        }
+
+        // Collision at the parent level: fall back to the fully-discriminated parent path.
+        let parent = DocRef::new(self.navigator, parent_ref.crate_docs, parent_ref.item);
+        let parent = match parent_ref.name {
+            Some(n) => parent.with_name(n),
+            None => parent,
+        };
+        let parent_path = parent.discriminated_path()?;
+        Some(format!("{parent_path}::{disc}@{name}"))
+    }
+
     pub fn kind(&self) -> ItemKind {
         match self.item.inner {
             ItemEnum::Module(_) => ItemKind::Module,
@@ -176,6 +275,7 @@ impl<'a, T> DocRef<'a, T> {
             crate_docs,
             item,
             name: None,
+            parent: None,
         }
     }
 

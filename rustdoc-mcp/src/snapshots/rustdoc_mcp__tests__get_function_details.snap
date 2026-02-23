@@ -5,7 +5,7 @@ expression: normalized_result
 Item: test_function
 Kind: Function
 Visibility: Public
-Defined at: test_crate::test_function
+Defined at: fixture_crate::test_function
 
 A public function
 

@@ -3,11 +3,11 @@ source: ferritin/src/tests.rs
 expression: "render_for_tests(Commands::get(\"crate\"), OutputMode :: TestMode)"
 ---
 <p>
-<strong>Item:</strong> test_crate
+<strong>Item:</strong> fixture_crate
 <strong>Kind:</strong> Module
 <strong>Visibility:</strong> Public
-<strong>Defined at:</strong> <type-name>test_crate</type-name>
-<strong>In crate:</strong> test-crate (0.1.0)</p>
+<strong>Defined at:</strong> <type-name>fixture_crate</type-name>
+<strong>In crate:</strong> fixture-crate (0.1.0)</p>
 <truncated level="full"><p>
 A minimal test crate for rustdoc JSON testing</p>
 </truncated>
@@ -22,6 +22,12 @@ Module for testing intra-doc link resolution</p>
 <type-name>markdown_test</type-name> </p>
 <truncated level="single-line"><title>Markdown: Syntax</title>
  <elided chars="8712"/></truncated>
+</item>
+  <item><p>
+<type-name>namespace_collisions</type-name> </p>
+<truncated level="single-line"><p>
+Module for testing namespace disambiguation with kind discriminators.</p>
+Contains a genuine <elided chars="120"/></truncated>
 </item>
   <item><p>
 <type-name>reexport_mod</type-name> </p>
@@ -39,6 +45,12 @@ A module with items</p>
 <truncated level="single-line"><p>
 A generic struct for testing multi-paragraph documentation.</p>
 This struct and provides a <elided chars="401"/></truncated>
+</item>
+  <item><p>
+<type-name>ReachableViaPrivateModule</type-name> </p>
+<truncated level="single-line"><p>
+A struct accessible only via re-export from a private module.</p>
+</truncated>
 </item>
   <item><p>
 <type-name>SubStruct</type-name> </p>

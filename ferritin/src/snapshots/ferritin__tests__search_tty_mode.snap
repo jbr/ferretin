@@ -5,7 +5,8 @@ expression: "render_for_tests(Commands::search(\"trigger line-based truncation\"
 Search results for 'trigger line-based truncation'
 ================================================================================
 
-  ◦ [test-crate::TestTrait](https://docs.rs/test-crate/0.1.0/test-crate/trait.TestTrait.html)  (Trait) - score: 100 (relevance: 100, authority: 0)
+  ◦ [fixture-crate::TestTrait](https://docs.rs/fixture-crate/0.1.0/fixture-crate/trait.TestTrait.html)  (Trait) - score: 100 (relevance: 100, authority:
+    0)
     A trait for testing extremely long documentation that exceeds line limits. [...]
 
   ◦ [core::line](http://docs.rust-lang.org/nightly/core/macro.line.html)  (Macro) - score: 36 (relevance: 36, authority: 0)

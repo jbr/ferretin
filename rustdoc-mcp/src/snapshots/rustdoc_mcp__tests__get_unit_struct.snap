@@ -5,7 +5,7 @@ expression: result
 Item: UnitStruct
 Kind: Struct
 Visibility: Public
-Defined at: test_crate::UnitStruct
+Defined at: fixture_crate::UnitStruct
 
 A unit struct for testing
 

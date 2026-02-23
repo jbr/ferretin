@@ -5,7 +5,7 @@ expression: result
 Item: TestEnum
 Kind: Enum
 Visibility: Public
-Defined at: test_crate::submodule::TestEnum
+Defined at: fixture_crate::submodule::TestEnum
 
 An enum for testing
 

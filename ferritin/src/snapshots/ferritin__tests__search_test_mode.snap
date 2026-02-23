@@ -5,7 +5,7 @@ expression: "render_for_tests(Commands::search(\"trigger line-based truncation\"
 <title>Search results for '<emphasis>trigger line-based truncation</emphasis>'</title>
 <list>
   <item><p>
-test-crate::TestTrait  (Trait) - score: 100 (relevance: 100, authority: 0)</p>
+fixture-crate::TestTrait  (Trait) - score: 100 (relevance: 100, authority: 0)</p>
 <truncated level="single-line"><p>
 A trait for testing extremely long documentation that exceeds line limits.</p>
 This It error flexib Each The error many doesn' goes This Line Line Line Line Line <elided chars="1259"/></truncated>

@@ -325,3 +325,40 @@ pub mod reexport_mod {
 pub mod markdown_test {
     #![doc=include_str!("./markdown_test.md")]
 }
+
+/// Module for testing namespace disambiguation with kind discriminators.
+///
+/// Contains a sub-module and a function that share the same name, creating a
+/// genuine module-function collision in rustdoc's paths map.
+pub mod namespace_collisions {
+    /// A module sharing its name with [`both()`] below.
+    pub mod both {
+        /// An item inside the colliding module.
+        pub struct Inside;
+    }
+
+    /// A function sharing its name with the [`both`] module above.
+    pub fn both() {}
+}
+
+/// Private module whose items are accessible only via re-export.
+///
+/// Items here appear in rustdoc's `paths` map with a path that goes through this
+/// private module (e.g. `fixture_crate::private_detail::ReachableViaPrivateModule`),
+/// which tree traversal cannot follow since `private_detail` is not a public child.
+/// They should be resolved via the `path_to_id` reverse index instead.
+mod private_detail {
+    /// A struct accessible only via re-export from a private module.
+    pub struct ReachableViaPrivateModule;
+
+    impl ReachableViaPrivateModule {
+        /// A method on a struct whose module is private.
+        ///
+        /// This exercises the combined case: the method is absent from rustdoc's
+        /// `paths` map (rust-lang/rust#152511), and the parent struct's
+        /// `ItemSummary::path` passes through this private module, so tree
+        /// traversal cannot anchor on the parent either.
+        pub fn private_module_method(&self) {}
+    }
+}
+pub use private_detail::ReachableViaPrivateModule;

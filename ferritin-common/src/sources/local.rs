@@ -189,6 +189,7 @@ impl LocalSource {
                     provenance: CrateProvenance::Workspace,
                     fs_path: json_path,
                     version,
+                    path_to_id: Default::default(),
                 });
             } else if !tried_rebuilding && self.can_rebuild {
                 tried_rebuilding = true;
@@ -240,6 +241,7 @@ impl LocalSource {
                     provenance: CrateProvenance::LocalDependency,
                     fs_path: json_path.to_owned(),
                     version,
+                    path_to_id: Default::default(),
                 });
             } else if !tried_rebuilding && self.can_rebuild {
                 tried_rebuilding = true;
