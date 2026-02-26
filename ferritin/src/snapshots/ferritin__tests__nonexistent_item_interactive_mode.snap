@@ -14,7 +14,7 @@ expression: "render_interactive_for_tests(Commands::get(\"crate::DoesNotExist\")
 "                                                                                "
 "     ◦ crate::markdown_test                                                     "
 "                                                                                "
-"     ◦ crate::TestStruct                                                        "
+"     ◦ crate::namespace_collisions                                              "
 "                                                                                "
 "                                                                                "
 "                                                                                "

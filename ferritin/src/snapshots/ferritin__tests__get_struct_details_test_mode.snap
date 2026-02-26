@@ -6,8 +6,8 @@ expression: "render_for_tests(Commands::get(\"crate::TestStruct\"), OutputMode :
 <strong>Item:</strong> TestStruct
 <strong>Kind:</strong> Struct
 <strong>Visibility:</strong> Public
-<strong>Defined at:</strong> <type-name>test_crate</type-name><punctuation>::</punctuation><type-name>TestStruct</type-name>
-<strong>In crate:</strong> test-crate (0.1.0)</p>
+<strong>Defined at:</strong> <type-name>fixture_crate</type-name><punctuation>::</punctuation><type-name>TestStruct</type-name>
+<strong>In crate:</strong> fixture-crate (0.1.0)</p>
 <truncated level="full"><p>
 A simple struct for testing basic functionality.</p>
 <p>
@@ -61,5 +61,7 @@ Update the count</p>
 </item>
 </list>
 </section><section><section-title>Trait Implementations</section-title><p>
-std traits: Any Borrow BorrowMut Clone CloneToUninit Debug Freeze From Into RefUnwindSafe Send Sync TestTrait ToOwned TryFrom TryInto Unpin UnsafeUnpin UnwindSafe </p>
+Trait Implementations: TestTrait </p>
+<p>
+std traits: Any Borrow BorrowMut Clone CloneToUninit Debug Freeze From Into RefUnwindSafe Send Sync ToOwned TryFrom TryInto Unpin UnsafeUnpin UnwindSafe </p>
 </section>

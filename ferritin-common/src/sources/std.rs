@@ -125,6 +125,7 @@ impl Source for StdSource {
             provenance: CrateProvenance::Std,
             fs_path: json_path,
             version: Some(self.rustc_version.clone()),
+            path_to_id: Default::default(),
         })
     }
 

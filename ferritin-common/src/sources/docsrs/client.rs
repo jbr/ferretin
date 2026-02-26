@@ -170,6 +170,7 @@ impl DocsRsClient {
             provenance: CrateProvenance::DocsRs,
             fs_path,
             version: Some(crate_version),
+            path_to_id: Default::default(),
         };
 
         Ok(Some(data))
@@ -285,6 +286,7 @@ impl DocsRsClient {
                 provenance: CrateProvenance::LocalDependency,
                 fs_path: path,
                 version,
+                path_to_id: Default::default(),
             };
 
             return Ok(Some(data));

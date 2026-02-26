@@ -5,7 +5,7 @@ expression: result
 Item: GenericStruct
 Kind: Struct
 Visibility: Public
-Defined at: test_crate::GenericStruct
+Defined at: fixture_crate::GenericStruct
 
 A generic struct for testing multi-paragraph documentation.
 

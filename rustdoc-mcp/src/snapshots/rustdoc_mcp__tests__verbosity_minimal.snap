@@ -2,19 +2,21 @@
 source: rustdoc-mcp/src/tests.rs
 expression: result
 ---
-Item: test_crate
+Item: fixture_crate
 Kind: Module
 Visibility: Public
-Defined at: test_crate
+Defined at: fixture_crate
 
 Modules:
 link_resolution_tests
 markdown_test
+namespace_collisions
 reexport_mod
 submodule
 
 Structs:
 GenericStruct
+ReachableViaPrivateModule
 SubStruct
 TestStruct
 TupleStruct

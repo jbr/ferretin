@@ -5,12 +5,12 @@ expression: "render_for_tests(Commands::get(\"crate::submodule::TestEnum\"), Out
 Item: TestEnum
 Kind: Enum
 Visibility: Public
-Defined at: [test_crate](https://docs.rs/test-crate/0.1.0/test-crate/index.html)::[submodule](https://docs.rs/test-crate/0.1.0/test-crate/submodule/index.html)::[TestEnum](https://docs.rs/test-crate/0.1.0/test-crate/submodule/enum.TestEnum.html)
-In crate: test-crate (0.1.0)
+Defined at: [fixture_crate](https://docs.rs/fixture-crate/0.1.0/fixture-crate/index.html)::[submodule](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/index.html)::[TestEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/enum.TestEnum.html)
+In crate: fixture-crate (0.1.0)
 
 An enum for testing
 
-This is like [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html) but without the generic
+This is like [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html) but without the generic
 
 enum TestEnum {
     VariantA,
@@ -24,7 +24,7 @@ enum TestEnum {
 Variants:
 
   ◦ VariantA 
-    Variant A (see also [crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html))
+    Variant A (see also [crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html))
 
   ◦ VariantB 
     Variant B with data

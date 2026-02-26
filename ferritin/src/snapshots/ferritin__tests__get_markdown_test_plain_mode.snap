@@ -1,12 +1,12 @@
 ---
 source: ferritin/src/tests.rs
-expression: "render_for_tests(Commands::get(\"test-crate::markdown_test\"), OutputMode ::\nPlain)"
+expression: "render_for_tests(Commands::get(\"fixture-crate::markdown_test\"), OutputMode ::\nPlain)"
 ---
 Item: markdown_test
 Kind: Module
 Visibility: Public
-Defined at: test_crate::markdown_test
-In crate: test-crate (0.1.0)
+Defined at: fixture_crate::markdown_test
+In crate: fixture-crate (0.1.0)
 
 Markdown: Syntax
 ================================================================================

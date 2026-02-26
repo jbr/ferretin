@@ -2,11 +2,11 @@
 source: ferritin/src/tests.rs
 expression: "render_for_tests(Commands::get(\"crate\"), OutputMode :: Plain)"
 ---
-Item: test_crate
+Item: fixture_crate
 Kind: Module
 Visibility: Public
-Defined at: test_crate
-In crate: test-crate (0.1.0)
+Defined at: fixture_crate
+In crate: fixture-crate (0.1.0)
 
 A minimal test crate for rustdoc JSON testing
 
@@ -18,6 +18,9 @@ Modules
   ◦ markdown_test 
     Markdown: Syntax [...]
 
+  ◦ namespace_collisions 
+    Module for testing namespace disambiguation with kind discriminators. [...]
+
   ◦ reexport_mod 
 
   ◦ submodule 
@@ -27,6 +30,9 @@ Structs
 
   ◦ GenericStruct 
     A generic struct for testing multi-paragraph documentation. [...]
+
+  ◦ ReachableViaPrivateModule 
+    A struct accessible only via re-export from a private module.
 
   ◦ SubStruct 
     A struct in a submodule

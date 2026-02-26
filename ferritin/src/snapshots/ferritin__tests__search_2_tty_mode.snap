@@ -5,7 +5,7 @@ expression: "render_for_tests(Commands::search(\"generic struct\"), OutputMode :
 Search results for 'generic struct'
 ================================================================================
 
-  ◦ [test-crate::GenericStruct](https://docs.rs/test-crate/0.1.0/test-crate/struct.GenericStruct.html)  (Struct) - score: 100 (relevance: 100,
+  ◦ [fixture-crate::GenericStruct](https://docs.rs/fixture-crate/0.1.0/fixture-crate/struct.GenericStruct.html)  (Struct) - score: 100 (relevance: 100,
     authority: 0)
     A generic struct for testing multi-paragraph documentation. [...]
 
@@ -30,7 +30,8 @@ Search results for 'generic struct'
   ◦ [std::ops::Deref](http://docs.rust-lang.org/nightly/core/ops/deref/trait.Deref.html)  (Trait) - score: 80 (relevance: 79, authority: 1)
     Used for immutable dereferencing operations, like *v. [...]
 
-  ◦ [test-crate::GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html)  (Enum) - score: 77 (relevance: 58, authority: 33)
+  ◦ [fixture-crate::GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html)  (Enum) - score: 77 (relevance: 58, authority:
+    33)
     A generic enum for testing [...]
 
   ◦ [core::mem::ManuallyDrop](http://docs.rust-lang.org/nightly/core/mem/manually_drop/struct.ManuallyDrop.html)  (Struct) - score: 76 (relevance: 76, authority: 1)

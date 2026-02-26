@@ -2,10 +2,10 @@
 source: rustdoc-mcp/src/tests.rs
 expression: result
 ---
-Item: test_crate
+Item: fixture_crate
 Kind: Module
 Visibility: Public
-Defined at: test_crate
+Defined at: fixture_crate
 
 A minimal test crate for rustdoc JSON testing
 
@@ -15,11 +15,14 @@ link_resolution_tests // Module for testing intra-doc link resolution
 link_resolution_tests::nested // Nested module for testing scoped resolution
 link_resolution_tests::nested::deeply_nested // Another nested module
 markdown_test // # Markdown: Syntax [+332 more lines]
+namespace_collisions // Module for testing namespace disambiguation with kind discriminators. [+3 more lines]
+namespace_collisions::both // A module sharing its name with [`both()`] below.
 reexport_mod
 submodule // A module with items
 
 Structs:
 GenericStruct // A generic struct for testing multi-paragraph documentation. [+14 more lines]
+ReachableViaPrivateModule // A struct accessible only via re-export from a private module.
 SubStruct // A struct in a submodule
 TestStruct // A simple struct for testing basic functionality. [+6 more lines]
 TupleStruct // A tuple struct for testing
@@ -33,6 +36,7 @@ link_resolution_tests::Tree // An ordered map based on a [B-Tree]. [+144 more li
 link_resolution_tests::nested::NestedStruct // Struct in nested module
 link_resolution_tests::nested::Str // A UTF-8–encoded, growable string. [+279 more lines]
 link_resolution_tests::nested::deeply_nested::DeepStruct // Struct in deeply nested module
+namespace_collisions::both::Inside // An item inside the colliding module.
 reexport_mod::SubStruct // A struct in a submodule
 submodule::SubStruct // A struct in a submodule
 
@@ -48,6 +52,7 @@ TestTrait // A trait for testing extremely long documentation that exceeds line 
 link_resolution_tests::nested::TestTrait // A trait for testing extremely long documentation that exceeds line limits. [+22 more lines]
 
 Functions:
+ReachableViaPrivateModule::private_module_method // A method on a struct whose module is private. [+5 more lines]
 SubStruct::double // Double the value
 SubStruct::get_value // Get the value
 SubStruct::new // Create a new SubStruct
@@ -191,6 +196,7 @@ link_resolution_tests::Tree::last_key_value // Returns the last key-value pair i
 link_resolution_tests::Tree::len // Returns the number of elements in the map. [+11 more lines]
 link_resolution_tests::Tree::lower_bound // Returns a [`Cursor`] pointing at the gap before the smallest key [+38 more lines]
 link_resolution_tests::Tree::lower_bound_mut // Returns a [`CursorMut`] pointing at the gap before the smallest key [+38 more lines]
+link_resolution_tests::Tree::merge // Moves all elements from `other` into `self`, leaving `other` empty. [+44 more lines]
 link_resolution_tests::Tree::new // Makes a new, empty `BTreeMap`. [+13 more lines]
 link_resolution_tests::Tree::new_in // Makes a new empty BTreeMap with a reasonable choice for B. [+14 more lines]
 link_resolution_tests::Tree::pop_first // Removes and returns the first element in the map. [+17 more lines]
@@ -255,6 +261,7 @@ link_resolution_tests::nested::Str::try_reserve // Tries to reserve capacity for
 link_resolution_tests::nested::Str::try_reserve_exact // Tries to reserve the minimum capacity for at least `additional` bytes [+35 more lines]
 link_resolution_tests::nested::Str::try_with_capacity // Creates a new empty `String` with at least the specified capacity. [+5 more lines]
 link_resolution_tests::nested::Str::with_capacity // Creates a new empty `String` with at least the specified capacity. [+38 more lines]
+namespace_collisions::both // A function sharing its name with the [`both`] module above.
 reexport_mod::SubStruct::double // Double the value
 reexport_mod::SubStruct::get_value // Get the value
 reexport_mod::SubStruct::new // Create a new SubStruct

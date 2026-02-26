@@ -6,8 +6,8 @@ expression: "render_for_tests(Commands::get(\"crate::submodule\"), OutputMode ::
 <strong>Item:</strong> submodule
 <strong>Kind:</strong> Module
 <strong>Visibility:</strong> Public
-<strong>Defined at:</strong> <type-name>test_crate</type-name><punctuation>::</punctuation><type-name>submodule</type-name>
-<strong>In crate:</strong> test-crate (0.1.0)</p>
+<strong>Defined at:</strong> <type-name>fixture_crate</type-name><punctuation>::</punctuation><type-name>submodule</type-name>
+<strong>In crate:</strong> fixture-crate (0.1.0)</p>
 <truncated level="full"><p>
 A module with items</p>
 </truncated>

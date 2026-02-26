@@ -5,7 +5,7 @@ expression: result
 Item: generic_function
 Kind: Function
 Visibility: Public
-Defined at: test_crate::generic_function
+Defined at: fixture_crate::generic_function
 
 A generic function
 

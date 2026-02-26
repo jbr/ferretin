@@ -1,12 +1,12 @@
 ---
 source: ferritin/src/tests.rs
-expression: "render_for_tests(Commands::get(\"test-crate::markdown_test\"), OutputMode ::\nTty)"
+expression: "render_for_tests(Commands::get(\"fixture-crate::markdown_test\"), OutputMode ::\nTty)"
 ---
 Item: markdown_test
 Kind: Module
 Visibility: Public
-Defined at: [test_crate](https://docs.rs/test-crate/0.1.0/test-crate/index.html)::[markdown_test](https://docs.rs/test-crate/0.1.0/test-crate/markdown_test/index.html)
-In crate: test-crate (0.1.0)
+Defined at: [fixture_crate](https://docs.rs/fixture-crate/0.1.0/fixture-crate/index.html)::[markdown_test](https://docs.rs/fixture-crate/0.1.0/fixture-crate/markdown_test/index.html)
+In crate: fixture-crate (0.1.0)
 
 Markdown: Syntax
 ================================================================================
@@ -88,7 +88,7 @@ with two or more spaces, then type return.
 Headers
 --------------------------------------------------------------------------------
 
-Markdown supports two styles of headers, [Setext](https://docs.rs/test-crate/latest/test-crate/index.html?search=test%2Dcrate%3A%3ASetext) [1](https://docs.rs/test-crate/latest/test-crate/index.html?search=test%2Dcrate%3A%3A1) and [atx](https://docs.rs/test-crate/latest/test-crate/index.html?search=test%2Dcrate%3A%3Aatx) [2](https://docs.rs/test-crate/latest/test-crate/index.html?search=test%2Dcrate%3A%3A2).
+Markdown supports two styles of headers, [Setext](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3ASetext) [1](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3A1) and [atx](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3Aatx) [2](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3A2).
 
 Optionally, you may "close" atx-style headers. This is purely cosmetic -- you
 can use this if you think it looks better. The closing hashes don't even need
@@ -316,7 +316,7 @@ Links
 
 Markdown supports two style of links: inline and reference.
 
-In both styles, the link text is delimited by [square brackets](https://docs.rs/test-crate/latest/test-crate/index.html?search=test%2Dcrate%3A%3Asquare%20brackets).
+In both styles, the link text is delimited by [square brackets](https://docs.rs/fixture-crate/latest/fixture-crate/index.html?search=fixture%2Dcrate%3A%3Asquare%20brackets).
 
 To create an inline link, use a set of regular parentheses immediately after
 the link text's closing square bracket. Inside the parentheses, put the URL

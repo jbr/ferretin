@@ -5,7 +5,7 @@ expression: result
 Item: TEST_CONSTANT
 Kind: Constant
 Visibility: Public
-Defined at: test_crate::TEST_CONSTANT
+Defined at: fixture_crate::TEST_CONSTANT
 
 A const for testing
 

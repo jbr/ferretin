@@ -5,7 +5,7 @@ expression: result
 Item: ComplexTrait
 Kind: Trait
 Visibility: Public
-Defined at: test_crate::ComplexTrait
+Defined at: fixture_crate::ComplexTrait
 
 A more complex trait demonstrating various features
 

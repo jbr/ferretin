@@ -13,14 +13,14 @@ use ratatui::backend::TestBackend;
 use std::path::PathBuf;
 
 /// Get the path to our test crate (fast to build, minimal dependencies)
-fn get_test_crate_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/test-crate")
+fn get_fixture_crate_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/fixture-crate")
 }
 
 /// Create a test state with isolated session
 fn create_test_state() -> Request {
     let navigator = Navigator::default()
-        .with_local_source(LocalSource::load(&get_test_crate_path()).ok())
+        .with_local_source(LocalSource::load(&get_fixture_crate_path()).ok())
         .with_std_source(StdSource::from_rustup());
     Request::new(navigator, FormatContext::new())
 }
@@ -52,13 +52,13 @@ fn render_for_tests(command: Commands, output_mode: OutputMode) -> String {
     };
 
     // Normalize the test crate path for consistent snapshots across environments
-    let test_crate_path = get_test_crate_path();
-    let test_crate_path_str = test_crate_path
+    let fixture_crate_path = get_fixture_crate_path();
+    let fixture_crate_path_str = fixture_crate_path
         .canonicalize()
-        .unwrap_or(test_crate_path)
+        .unwrap_or(fixture_crate_path)
         .to_string_lossy()
         .to_string();
-    let output = output.replace(&test_crate_path_str, "/TEST_CRATE_ROOT");
+    let output = output.replace(&fixture_crate_path_str, "/TEST_CRATE_ROOT");
 
     // Normalize Rust version info to avoid daily breakage with nightly updates
     // Matches patterns like: 1.95.0-nightly	(f889772d6	2026-02-05)
@@ -98,15 +98,15 @@ macro_rules! test_all_modes {
 
             #[test]
             fn [<$name _interactive_mode>]() {
-                let test_crate_path = get_test_crate_path();
-                let test_crate_path_str = test_crate_path
+                let fixture_crate_path = get_fixture_crate_path();
+                let fixture_crate_path_str = fixture_crate_path
                     .canonicalize()
-                    .unwrap_or(test_crate_path)
+                    .unwrap_or(fixture_crate_path)
                     .to_string_lossy()
                     .to_string();
 
                 let mut settings = insta::Settings::clone_current();
-                settings.add_filter(&test_crate_path_str, "/TEST_CRATE_ROOT");
+                settings.add_filter(&fixture_crate_path_str, "/TEST_CRATE_ROOT");
                 // Strip trailing whitespace from lines containing the replaced path
                 // to avoid snapshot differences due to fixed-width TUI padding
                 settings.add_filter(r#"(?m)(.*TEST_CRATE_ROOT[^"]+?)\s+"$"#, r#"$1""#);
@@ -151,7 +151,7 @@ test_all_modes!(
 
 test_all_modes!(
     get_item_with_normalized_crate_name,
-    Commands::get("test-crate::TestStruct")
+    Commands::get("fixture-crate::TestStruct")
 );
 
 test_all_modes!(list_crates, Commands::list());
@@ -179,5 +179,5 @@ test_all_modes!(get_std, Commands::get("std"));
 
 test_all_modes!(
     get_markdown_test,
-    Commands::get("test-crate::markdown_test")
+    Commands::get("fixture-crate::markdown_test")
 );

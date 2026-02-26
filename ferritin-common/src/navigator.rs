@@ -8,7 +8,7 @@ use crate::sources::{CrateProvenance, DocsRsSource, LocalSource, Source, StdSour
 use crate::string_utils::case_aware_jaro_winkler;
 use elsa::sync::FrozenMap;
 use fieldwork::Fieldwork;
-use rustdoc_types::{Id, Item, ItemEnum};
+use rustdoc_types::{Id, Item, ItemEnum, ItemKind};
 use semver::Version;
 use semver::VersionReq;
 use std::borrow::Cow;
@@ -148,23 +148,23 @@ impl Navigator {
         mut path: &str,
         suggestions: &mut Vec<Suggestion<'a>>,
     ) -> Option<DocRef<'a, Item>> {
-        if let Some("::") = path.get(0..2) {
-            path = &path[2..];
+        if let Some(p) = path.strip_prefix("::") {
+            path = p;
         }
 
-        let (crate_name, index) = if let Some(index) = path.find("::") {
-            (&path[..index], Some(index + 2))
+        let (crate_specifier, path_start_index) = if let Some(first_scope) = path.find("::") {
+            (&path[..first_scope], Some(first_scope + 2))
         } else {
             (path, None)
         };
 
-        let (crate_name, version_req) = if let Some(index) = crate_name.find("@") {
+        let (crate_name, version_req) = if let Some(at) = crate_specifier.find("@") {
             (
-                &crate_name[..index],
-                VersionReq::parse(&crate_name[index + 1..]).unwrap_or(VersionReq::STAR),
+                &crate_specifier[..at],
+                VersionReq::parse(&crate_specifier[at + 1..]).unwrap_or(VersionReq::STAR),
             )
         } else {
-            (crate_name, VersionReq::STAR)
+            (crate_specifier, VersionReq::STAR)
         };
 
         let Some(crate_data) = self.load_crate(crate_name, &version_req) else {
@@ -178,8 +178,51 @@ impl Navigator {
 
         // Start from crate root
         let item = crate_data.get(self, &crate_data.root)?;
-        if let Some(index) = index {
-            self.find_children_recursive(item, path, index, suggestions)
+        if let Some(path_start_index) = path_start_index {
+            // Try tree traversal first: this returns the canonical public item (e.g. the
+            // re-exported module, not the primitive of the same name).
+            if let Some(item) =
+                self.find_children_recursive(item, path, path_start_index, suggestions)
+            {
+                return Some(item);
+            }
+
+            let suffix = &path[path_start_index..];
+
+            // Fallback: check the reverse path index for items whose ItemSummary::path passes
+            // through private modules that don't appear as children in the public item tree,
+            // making tree traversal fail for those paths.
+            if let Some(item) = crate_data
+                .path_to_id
+                .get(suffix)
+                .and_then(|&id| crate_data.index.get(&id))
+                .map(|item| DocRef::new(self, crate_data, item))
+            {
+                return Some(item);
+            }
+
+            // Second fallback: for items absent from rustdoc's paths map (e.g. inherent
+            // methods; rust-lang/rust#152511) whose parent IS in the index. Strip the last
+            // segment, look up the remainder in path_to_id, then traverse into the child.
+            // One level of stripping is sufficient: only impl-block items are orphaned, and
+            // their parents (structs/enums/traits) always have an ItemSummary entry.
+            if let Some(sep) = suffix.rfind("::") {
+                let parent_suffix = &suffix[..sep];
+                let child_start = path_start_index + sep + 2;
+                if let Some(&parent_id) = crate_data.path_to_id.get(parent_suffix)
+                    && let Some(parent_item) = crate_data.index.get(&parent_id)
+                {
+                    let parent_ref = DocRef::new(self, crate_data, parent_item);
+                    return self.find_children_recursive(
+                        parent_ref,
+                        path,
+                        child_start,
+                        suggestions,
+                    );
+                }
+            }
+
+            None
         } else {
             Some(item)
         }
@@ -238,9 +281,12 @@ impl Navigator {
         log::debug!("⏱️ Total load time for {}: {:?}", resolved_name, elapsed);
 
         match result {
-            Some(data) => {
+            Some(mut data) => {
                 // Index external crates for future lookups
                 self.index_external_crates(&data);
+
+                // Build reverse path index before caching
+                data.build_path_index();
 
                 // Cache in working set
                 self.working_set
@@ -357,8 +403,10 @@ impl Navigator {
         let segment = &path[index..segment_end];
         let next_segment_start = path.len().min(segment_end + 2);
 
+        let (kind_filter, segment_name) = parse_discriminated_segment(segment);
+
         log::trace!(
-            "🔎 searching for {segment} in {} ({:?}) (remaining {})",
+            "🔎 searching for {segment_name} (kind={kind_filter:?}) in {} ({:?}) (remaining {})",
             &path[..index],
             item.kind(),
             &path[next_segment_start..]
@@ -366,7 +414,8 @@ impl Navigator {
 
         for child in item.child_items() {
             if let Some(name) = child.name()
-                && name == segment
+                && name == segment_name
+                && kind_filter.map_or(true, |k| child.kind() == k)
                 && let Some(child) =
                     self.find_children_recursive(child, path, next_segment_start, suggestions)
             {
@@ -399,6 +448,47 @@ impl Navigator {
                 }
             })
         })
+    }
+}
+
+/// Parse a path segment that may carry a rustdoc kind discriminator prefix, e.g. `"fn@foo"`.
+///
+/// Returns `(kind_filter, name)` where:
+/// - `kind_filter` is `Some(kind)` to require an exact kind match, or `None` to accept any kind.
+/// - `name` is the item name with the discriminator prefix stripped.
+///
+/// If the text before `@` is not a recognised discriminator, the full segment is returned
+/// unchanged as `(None, segment)` so that `@` in item names doesn't accidentally trigger this.
+///
+/// `value@` is a special case from rustdoc's syntax that matches any value-namespace item
+/// (functions, constants, statics, variants); we strip the prefix but don't filter by kind.
+fn parse_discriminated_segment(segment: &str) -> (Option<ItemKind>, &str) {
+    let Some(at) = segment.find('@') else {
+        return (None, segment);
+    };
+    let (disc, name) = (&segment[..at], &segment[at + 1..]);
+    match disc {
+        "mod" | "module" => (Some(ItemKind::Module), name),
+        "struct" => (Some(ItemKind::Struct), name),
+        "enum" => (Some(ItemKind::Enum), name),
+        "union" => (Some(ItemKind::Union), name),
+        "trait" => (Some(ItemKind::Trait), name),
+        "traitalias" => (Some(ItemKind::TraitAlias), name),
+        "fn" | "function" | "method" => (Some(ItemKind::Function), name),
+        "tyalias" | "typealias" => (Some(ItemKind::TypeAlias), name),
+        "type" => (Some(ItemKind::AssocType), name),
+        "const" | "constant" => (Some(ItemKind::Constant), name),
+        "static" => (Some(ItemKind::Static), name),
+        "macro" => (Some(ItemKind::Macro), name),
+        "attr" => (Some(ItemKind::ProcAttribute), name),
+        "derive" => (Some(ItemKind::ProcDerive), name),
+        "prim" | "primitive" => (Some(ItemKind::Primitive), name),
+        "field" => (Some(ItemKind::StructField), name),
+        "variant" => (Some(ItemKind::Variant), name),
+        // `value@` matches any value-namespace item — strip prefix, no kind filter.
+        "value" => (None, name),
+        // Unrecognised prefix: treat the whole string as the item name.
+        _ => (None, segment),
     }
 }
 

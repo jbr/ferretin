@@ -20,6 +20,6 @@ crate::reexport_mod</p>
 crate::markdown_test</p>
 </item>
   <item><p>
-crate::TestStruct</p>
+crate::namespace_collisions</p>
 </item>
 </list>

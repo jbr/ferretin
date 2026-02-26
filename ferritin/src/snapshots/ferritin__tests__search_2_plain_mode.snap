@@ -5,7 +5,7 @@ expression: "render_for_tests(Commands::search(\"generic struct\"), OutputMode :
 Search results for 'generic struct'
 ================================================================================
 
-  ◦ test-crate::GenericStruct  (Struct) - score: 100 (relevance: 100, authority: 0)
+  ◦ fixture-crate::GenericStruct  (Struct) - score: 100 (relevance: 100, authority: 0)
     A generic struct for testing multi-paragraph documentation. [...]
 
   ◦ alloc::borrow::Borrow  (Trait) - score: 91 (relevance: 85, authority: 7)
@@ -29,7 +29,7 @@ Search results for 'generic struct'
   ◦ std::ops::Deref  (Trait) - score: 80 (relevance: 79, authority: 1)
     Used for immutable dereferencing operations, like *v. [...]
 
-  ◦ test-crate::GenericEnum  (Enum) - score: 77 (relevance: 58, authority: 33)
+  ◦ fixture-crate::GenericEnum  (Enum) - score: 77 (relevance: 58, authority: 33)
     A generic enum for testing [...]
 
   ◦ core::mem::ManuallyDrop  (Struct) - score: 76 (relevance: 76, authority: 1)

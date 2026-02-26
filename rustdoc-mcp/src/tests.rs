@@ -8,8 +8,8 @@ use mcplease::traits::Tool;
 use std::path::PathBuf;
 
 /// Get the path to our test crate (fast to build, minimal dependencies)
-fn get_test_crate_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/test-crate")
+fn get_fixture_crate_path() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/fixture-crate")
 }
 
 /// Create a test state with isolated session
@@ -19,7 +19,7 @@ fn create_test_state() -> RustdocTools {
         .with_default_session_id("test");
 
     SetWorkingDirectory {
-        path: get_test_crate_path().to_string_lossy().to_string(),
+        path: get_fixture_crate_path().to_string_lossy().to_string(),
     }
     .execute(&mut state)
     .unwrap();
@@ -97,7 +97,7 @@ fn test_verbosity_minimal() {
     assert!(!result.contains("Documentation:"));
 
     // But should still contain structure information
-    assert!(result.contains("Item: test_crate"));
+    assert!(result.contains("Item: fixture_crate"));
     assert!(
         result.contains("Structs:") || result.contains("Enums:") || result.contains("Functions:")
     );
@@ -167,11 +167,11 @@ fn test_get_struct_with_source() {
     };
 
     let result = tool.execute(&mut state).expect("Tool execution failed");
-    let test_crate_dir = state.get_context(None).unwrap().unwrap();
+    let fixture_crate_dir = state.get_context(None).unwrap().unwrap();
 
     // Normalize project path in source output
     let normalized_result = result.replace(
-        &test_crate_dir.to_string_lossy().to_string(),
+        &fixture_crate_dir.to_string_lossy().to_string(),
         "/TEST_CRATE_ROOT",
     );
     insta::assert_snapshot!(normalized_result);
@@ -189,11 +189,11 @@ fn test_get_function_details() {
     };
 
     let result = tool.execute(&mut state).expect("Tool execution failed");
-    let test_crate_dir = state.get_context(None).unwrap().unwrap();
+    let fixture_crate_dir = state.get_context(None).unwrap().unwrap();
 
     // Normalize project path in source output
     let normalized_result = result.replace(
-        &test_crate_dir.to_string_lossy().to_string(),
+        &fixture_crate_dir.to_string_lossy().to_string(),
         "/TEST_CRATE_ROOT",
     );
     insta::assert_snapshot!(normalized_result);
@@ -503,9 +503,9 @@ fn test_get_std_vec() {
 fn test_get_item_with_normalized_crate_name() {
     let mut state = create_test_state();
 
-    // Get an item from the test-crate using a hyphen in the name
+    // Get an item from the fixture-crate using a hyphen in the name
     let tool = GetItem {
-        name: "test-crate::TestStruct".to_string(),
+        name: "fixture-crate::TestStruct".to_string(),
         ..Default::default()
     };
 

@@ -3,11 +3,11 @@ source: ferritin/src/tests.rs
 expression: "render_for_tests(Commands::get(\"crate\").recursive(), OutputMode :: TestMode)"
 ---
 <p>
-<strong>Item:</strong> test_crate
+<strong>Item:</strong> fixture_crate
 <strong>Kind:</strong> Module
 <strong>Visibility:</strong> Public
-<strong>Defined at:</strong> <type-name>test_crate</type-name>
-<strong>In crate:</strong> test-crate (0.1.0)</p>
+<strong>Defined at:</strong> <type-name>fixture_crate</type-name>
+<strong>In crate:</strong> fixture-crate (0.1.0)</p>
 <truncated level="full"><p>
 A minimal test crate for rustdoc JSON testing</p>
 </truncated>
@@ -36,6 +36,18 @@ Another nested module</p>
  <elided chars="8712"/></truncated>
 </item>
   <item><p>
+<type-name>namespace_collisions</type-name> </p>
+<truncated level="single-line"><p>
+Module for testing namespace disambiguation with kind discriminators.</p>
+Contains a genuine <elided chars="120"/></truncated>
+</item>
+  <item><p>
+<type-name>namespace_collisions::both</type-name> </p>
+<truncated level="single-line"><p>
+A module sharing its name with <inline-code>both()</inline-code> below.</p>
+</truncated>
+</item>
+  <item><p>
 <type-name>reexport_mod</type-name> </p>
 </item>
   <item><p>
@@ -51,6 +63,12 @@ A module with items</p>
 <truncated level="single-line"><p>
 A generic struct for testing multi-paragraph documentation.</p>
 This struct and provides a <elided chars="401"/></truncated>
+</item>
+  <item><p>
+<type-name>ReachableViaPrivateModule</type-name> </p>
+<truncated level="single-line"><p>
+A struct accessible only via re-export from a private module.</p>
+</truncated>
 </item>
   <item><p>
 <type-name>SubStruct</type-name> </p>
@@ -132,6 +150,12 @@ Struct in deeply nested module</p>
 </truncated>
 </item>
   <item><p>
+<type-name>namespace_collisions::both::Inside</type-name> </p>
+<truncated level="single-line"><p>
+An item inside the colliding module.</p>
+</truncated>
+</item>
+  <item><p>
 <type-name>reexport_mod::SubStruct</type-name> </p>
 <truncated level="single-line"><p>
 A struct in a submodule</p>
@@ -199,6 +223,12 @@ This It error flexib Each The error many doesn' goes This Line Line Line Line Li
 </item>
 </list>
 </section><section><section-title>Functions</section-title><list>
+  <item><p>
+<type-name>ReachableViaPrivateModule::private_module_method</type-name> </p>
+<truncated level="single-line"><p>
+A method on a struct whose module is private.</p>
+This exercises the combined case: <inline-code>paths</inline-code> map (rust-lang/rust#152511), and <inline-code>ItemSummary::path</inline-code> passes through this private traversal cannot anchor on the <elided chars="201"/></truncated>
+</item>
   <item><p>
 <type-name>SubStruct::double</type-name> </p>
 <truncated level="single-line"><p>
@@ -948,6 +978,12 @@ Returns the number of elements in the map.</p>
 <truncated level="single-line">Returns a <inline-code>CursorMut</inline-code> pointing at the gap before the smallest key greater than the given bound. <elided chars="1005"/></truncated>
 </item>
   <item><p>
+<type-name>link_resolution_tests::Tree::merge</type-name> </p>
+<truncated level="single-line"><p>
+Moves all elements from <inline-code>other</inline-code> into <inline-code>self</inline-code>, leaving <inline-code>other</inline-code> empty.</p>
+If a key from <inline-code>other</inline-code> is already<inline-code>self</inline-code>, then the <inline-code>conflict</inline-code> closure is used to<inline-code>self</inline-code>. The <inline-code>conflict</inline-code> closure takes in a<inline-code>self</inline-code>'s key, <inline-code>self</inline-code>'s value, and <inline-code>other</inline-code>'s value in that order. <elided chars="1140"/></truncated>
+</item>
+  <item><p>
 <type-name>link_resolution_tests::Tree::new</type-name> </p>
 <truncated level="single-line"><p>
 Makes a new, empty <inline-code>BTreeMap</inline-code>.</p>
@@ -1296,6 +1332,12 @@ Returns <inline-code>Err</inline-code> if the<inline-code>isize::MAX</inline-cod
 <truncated level="single-line"><p>
 Creates a new empty <inline-code>String</inline-code> with at least the specified capacity.</p>
 <inline-code>String</inline-code>s have an the length of<inline-code>capacity</inline-code> method. This<inline-code>String</inline-code>, but one with buffer that can<inline-code>capacity</inline-code> bytes. This is may be<inline-code>String</inline-code>, reducing the reallocations <elided chars="850"/></truncated>
+</item>
+  <item><p>
+<type-name>namespace_collisions::both</type-name> </p>
+<truncated level="single-line"><p>
+A function sharing its name with the <inline-code>both</inline-code> module above.</p>
+</truncated>
 </item>
   <item><p>
 <type-name>reexport_mod::SubStruct::double</type-name> </p>

@@ -13,6 +13,10 @@ expression: "render_for_tests(Commands::list(), OutputMode :: TestMode)"
     The Rust Core Library</p>
 </item>
   <item><p>
+<strong>fixture-crate</strong>  (workspace-local, aliased as <strong>crate</strong>)
+    this is the crate description</p>
+</item>
+  <item><p>
 <strong>proc_macro</strong>  1.95.0-nightly
     A support library for macro authors when defining new macros</p>
 </item>
@@ -23,9 +27,5 @@ expression: "render_for_tests(Commands::list(), OutputMode :: TestMode)"
   <item><p>
 <strong>test</strong>  1.95.0-nightly
     Support code for rustc's built in unit-test and micro-benchmarking framework</p>
-</item>
-  <item><p>
-<strong>test-crate</strong>  (workspace-local, aliased as <strong>crate</strong>)
-    this is the crate description</p>
 </item>
 </list>

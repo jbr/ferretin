@@ -1,4 +1,4 @@
-use crate::doc_ref::DocRef;
+use crate::doc_ref::{DocRef, ParentRef};
 use fieldwork::Fieldwork;
 use rustdoc_types::{Id, Item, ItemEnum, Type, Use};
 use std::collections::hash_map::Values;
@@ -76,7 +76,7 @@ impl<'a> Iterator for MethodIter<'a> {
             if let Some(current_item_iter) = &mut self.current_item_iter {
                 for id in current_item_iter {
                     if let Some(item) = self.item.get(id) {
-                        return Some(item);
+                        return Some(item.with_parent(self.item));
                     }
                 }
             }
@@ -99,6 +99,8 @@ pub struct IdIter<'a, T> {
     glob_iter: Option<Box<IdIter<'a, Item>>>,
     #[field(with)]
     include_use: bool,
+    #[field(with(vis = "pub(crate)", option_set_some, into))]
+    parent: Option<ParentRef<'a>>,
 }
 
 impl<'a, T> IdIter<'a, T> {
@@ -108,6 +110,7 @@ impl<'a, T> IdIter<'a, T> {
             id_iter: ids.iter(),
             glob_iter: None,
             include_use: false,
+            parent: None,
         }
     }
 }
@@ -155,7 +158,10 @@ impl<'a, T> Iterator for IdIter<'a, T> {
                             return Some(source_item.with_name(&use_item.name));
                         }
                     }
-                    return Some(item);
+                    return Some(match self.parent {
+                        Some(parent) => item.with_parent(parent),
+                        None => item,
+                    });
                 }
             }
             if self.glob_iter.is_none() {
@@ -270,11 +276,15 @@ impl<'a> Iterator for ChildItems<'a> {
 
 impl<'a> ChildItems<'a> {
     pub(crate) fn new(item: DocRef<'a, Item>) -> Self {
+        let parent = ParentRef::from(item);
         match &item.item().inner {
-            ItemEnum::Module(module) => Self::Module(item.id_iter(&module.items)),
-            ItemEnum::Enum(enum_item) => {
-                Self::Enum(item.id_iter(&enum_item.variants), item.methods())
+            ItemEnum::Module(module) => {
+                Self::Module(item.id_iter(&module.items).with_parent(parent))
             }
+            ItemEnum::Enum(enum_item) => Self::Enum(
+                item.id_iter(&enum_item.variants).with_parent(parent),
+                item.methods(),
+            ),
             ItemEnum::Struct(_) => Self::AssociatedMethods(item.methods()),
             ItemEnum::Use(use_item) => ChildItems::Use(Some(item.build_ref(use_item)), None, false),
             _ => Self::None,

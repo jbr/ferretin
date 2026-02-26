@@ -1,5 +1,5 @@
 [package]
-name = "test-crate"
+name = "fixture-crate"
 version = "0.1.0"
 edition = "2021"
 description = "this is the crate description"

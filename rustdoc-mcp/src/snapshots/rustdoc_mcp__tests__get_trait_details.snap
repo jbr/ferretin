@@ -5,7 +5,7 @@ expression: result
 Item: TestTrait
 Kind: Trait
 Visibility: Public
-Defined at: test_crate::TestTrait
+Defined at: fixture_crate::TestTrait
 
 A trait for testing extremely long documentation that exceeds line limits.
 

@@ -5,12 +5,12 @@ expression: "render_for_tests(Commands::get(\"crate::GenericEnum\"), OutputMode 
 Item: GenericEnum
 Kind: Enum
 Visibility: Public
-Defined at: [test_crate](https://docs.rs/test-crate/0.1.0/test-crate/index.html)::[GenericEnum](https://docs.rs/test-crate/0.1.0/test-crate/enum.GenericEnum.html)
-In crate: test-crate (0.1.0)
+Defined at: [fixture_crate](https://docs.rs/fixture-crate/0.1.0/fixture-crate/index.html)::[GenericEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/enum.GenericEnum.html)
+In crate: fixture-crate (0.1.0)
 
 A generic enum for testing
 
-See also [crate::TestEnum](https://docs.rs/test-crate/0.1.0/test-crate/submodule/enum.TestEnum.html)
+See also [crate::TestEnum](https://docs.rs/fixture-crate/0.1.0/fixture-crate/submodule/enum.TestEnum.html)
 
 enum GenericEnum<T, U = [String](http://docs.rust-lang.org/nightly/alloc/string/struct.String.html)>
 where

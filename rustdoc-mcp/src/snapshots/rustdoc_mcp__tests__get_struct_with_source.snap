@@ -5,7 +5,7 @@ expression: normalized_result
 Item: TestStruct
 Kind: Struct
 Visibility: Public
-Defined at: test_crate::TestStruct
+Defined at: fixture_crate::TestStruct
 
 A simple struct for testing basic functionality.
 
@@ -45,7 +45,9 @@ Associated Types:
     Update the count
 
 
-std traits: Any, Borrow<T>, BorrowMut<T>, Clone, CloneToUninit, Debug, Freeze, From<T>, Into<U>, RefUnwindSafe [+9 more]
+Trait Implementations:
+TestTrait
+std traits: Any, Borrow<T>, BorrowMut<T>, Clone, CloneToUninit, Debug, Freeze, From<T>, Into<U>, RefUnwindSafe [+8 more]
 
 Source: /TEST_CRATE_ROOT/src/lib.rs
 ```rust

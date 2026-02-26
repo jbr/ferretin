@@ -5,7 +5,7 @@ expression: "render_for_tests(Commands::search(\"generic struct\"), OutputMode :
 <title>Search results for '<emphasis>generic struct</emphasis>'</title>
 <list>
   <item><p>
-test-crate::GenericStruct  (Struct) - score: 100 (relevance: 100, authority: 0)</p>
+fixture-crate::GenericStruct  (Struct) - score: 100 (relevance: 100, authority: 0)</p>
 <truncated level="single-line"><p>
 A generic struct for testing multi-paragraph documentation.</p>
 This struct and provides a <elided chars="401"/></truncated>
@@ -53,7 +53,7 @@ Used for immutable dereferencing operations, like <inline-code>*v</inline-code>.
 In addition to being used (unary) <inline-code>*</inline-code> operator in immutable<inline-code>Deref</inline-code> is also used implicitly by the compiler in many "<inline-code>Deref</inline-code> coercion". In mutable contexts, <inline-code>DerefMut</inline-code> is used and mutable deref coercion <elided chars="4481"/></truncated>
 </item>
   <item><p>
-test-crate::GenericEnum  (Enum) - score: 77 (relevance: 58, authority: 33)</p>
+fixture-crate::GenericEnum  (Enum) - score: 77 (relevance: 58, authority: 33)</p>
 <truncated level="single-line"><p>
 A generic enum for testing</p>
 <p>

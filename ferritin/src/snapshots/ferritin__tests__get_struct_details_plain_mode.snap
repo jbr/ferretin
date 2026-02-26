@@ -5,8 +5,8 @@ expression: "render_for_tests(Commands::get(\"crate::TestStruct\"), OutputMode :
 Item: TestStruct
 Kind: Struct
 Visibility: Public
-Defined at: test_crate::TestStruct
-In crate: test-crate (0.1.0)
+Defined at: fixture_crate::TestStruct
+In crate: fixture-crate (0.1.0)
 
 A simple struct for testing basic functionality.
 
@@ -43,4 +43,6 @@ Associated Types
 
 Trait Implementations
 
-std traits: Any Borrow BorrowMut Clone CloneToUninit Debug Freeze From Into RefUnwindSafe Send Sync TestTrait ToOwned TryFrom TryInto Unpin UnsafeUnpin UnwindSafe
+Trait Implementations: TestTrait 
+
+std traits: Any Borrow BorrowMut Clone CloneToUninit Debug Freeze From Into RefUnwindSafe Send Sync ToOwned TryFrom TryInto Unpin UnsafeUnpin UnwindSafe
